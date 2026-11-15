@@ -193,12 +193,12 @@ function Hud.start()
 				eyeState.TextColor3 = Color3.fromRGB(255, 90, 70)
 				eyeState.Text = if untilChange
 					then string.format("L'ŒIL EST OUVERT — encore %d s", math.ceil(untilChange))
-					else "L'ŒIL EST OUVERT — il ne se ferme plus"
+					else "L'ŒIL NE SE FERMERA PLUS"
 			else
 				eyeState.TextColor3 = Color3.fromRGB(240, 232, 220)
 				eyeState.Text = if untilChange
 					then string.format("L'Œil s'ouvre dans %d s", math.ceil(untilChange))
-					else "L'Œil est fermé"
+					else "L'Œil dort… pour l'instant"
 			end
 		else
 			regard.Text = ""
@@ -217,7 +217,7 @@ function Hud.start()
 			local name, text, at = string.match(last, "^(.-)|(.-)|(.+)$")
 			local t = tonumber(at)
 			if name and text and t and now - t < P.announceSeconds then
-				power.Text = "L'ŒIL GAGNE UN POUVOIR : " .. name .. "\n" .. text
+				power.Text = "L'ŒIL APPREND : " .. name .. "\n" .. text
 			end
 		end
 		local count = workspace:GetAttribute(M.aliveAttribute)
@@ -226,7 +226,7 @@ function Hud.start()
 		alive.Text = if typeof(count) == "number"
 				and playing
 				and inGame
-			then string.format("Restants : %d", count)
+			then string.format("Survivants : %d", count)
 			else ""
 
 		-- Le centre : la phase.
@@ -234,7 +234,7 @@ function Hud.start()
 		if phase == "Attente" then
 			text = if left
 				then string.format("La partie commence dans %d s", math.ceil(left))
-				else "En attente de joueurs…"
+				else "Il attend d'autres proies…"
 		elseif phase == "Visee" then
 			text = if ButtonIcons.touch()
 				then "Choisis où l'Œil te crache\nglisse le doigt pour viser"
@@ -245,7 +245,7 @@ function Hud.start()
 				then winner .. (if string.find(winner, ",", 1, true)
 					then " ont survécu à l'Œil"
 					else " a survécu à l'Œil")
-				else "L'Œil a pris tout le monde"
+				else "L'Œil les a tous pris"
 			if left then
 				text ..= string.format("\nNouvelle partie dans %d s", math.ceil(left))
 			end
@@ -253,8 +253,7 @@ function Hud.start()
 			phase == "Partie" and player:GetAttribute(Config.goulag.stateAttribute) == "Cage"
 		then
 			local round = workspace:GetAttribute(Config.goulag.roundAttribute)
-			text =
-				"LE VENTRE DE L'ŒIL\nJette ton adversaire dans le vide pour revenir. Une seule chance."
+			text = "LE VENTRE DE L'ŒIL\nUn seul en ressort. Jette l'autre dans le vide."
 			if typeof(round) == "number" and round > now then
 				text ..= string.format("\nProchain duel dans %d s", math.ceil(round - now))
 			end
@@ -262,10 +261,10 @@ function Hud.start()
 			phase == "Partie" and player:GetAttribute(Config.goulag.stateAttribute) == "Duel"
 		then
 			text = if player:GetAttribute(Config.goulag.suddenAttribute) == true
-				then "MORT SUBITE — le sol s'écroule"
-				else "DUEL — jette-le par-dessus bord"
+				then "MORT SUBITE — le sol s'effondre"
+				else "DUEL — jette-le dans le vide"
 		elseif phase == "Partie" and inMatch == false then
-			text = "L'Œil t'a pris."
+			text = "L'Œil t'a avalé."
 		elseif phase == "Partie" and player:GetAttribute(Config.combat.carriedAttribute) then
 			text = "On te porte…"
 		elseif phase == "Partie" and player:GetAttribute(Config.combat.koAttribute) then
@@ -282,7 +281,7 @@ function Hud.start()
 		local exposure = if typeof(level) == "number" and inMatch == true then level else 0
 		bar.Size = UDim2.fromScale(exposure, 1)
 		barBack.Visible = exposure > 0
-		barText.Text = if exposure > 0 then "Il te voit" else ""
+		barText.Text = if exposure > 0 then "IL TE VOIT" else ""
 		for _, f in edges do
 			f.BackgroundTransparency = 1 - exposure * 0.85
 		end
@@ -297,7 +296,7 @@ function Hud.start()
 				local outside = math.sqrt(dx * dx + dz * dz) - circle.Y
 				if outside > 0 then
 					alert = string.format(
-						"HORS DU CERCLE — il te voit partout ! Le cercle est %s (%d m)",
+						"HORS DU CERCLE — il te voit partout ! Rentre : %s (%d m)",
 						direction(root.Position, Vector3.new(circle.X, 0, circle.Z)),
 						math.ceil(outside)
 					)
@@ -309,10 +308,10 @@ function Hud.start()
 				and typeof(suspicion) == "number"
 				and suspicion >= Config.suspicion.warnAt
 			then
-				alert = "Il te sent… bouge."
+				alert = "Il te sent… ne reste pas là."
 			end
 			if alert == "" and player:GetAttribute(E.huntedAttribute) == true then
-				alert = "Un faisceau te suit !"
+				alert = "IL TE TRAQUE — casse sa ligne de vue !"
 			end
 		end
 		warning.Text = alert
@@ -324,14 +323,14 @@ function Hud.start()
 		local touch = ButtonIcons.touch()
 		hint.Text = if typeof(hidden) == "string"
 			then (if touch
-				then "Caché (" .. hidden .. ") — Sortir, ou Jaillir pour sortir en force"
-				else "Caché (" .. hidden .. ") — X pour sortir, R2 pour sortir en force")
+				then "Caché (" .. hidden .. ") · Sortir, ou Jaillir en force"
+				else "Caché (" .. hidden .. ") · X sortir · R2 jaillir")
 			elseif typeof(carried) == "string" then "Tu portes " .. carried .. (if touch
 				then " — Jeter ou Poser"
 				else " — Y jeter, B poser")
 			elseif player:GetAttribute(Config.goulag.stateAttribute) == "Duel" then (if touch
-				then "Frapper : 3 coups, K.O. ; un coup à terre : il s'envole"
-				else "R2 frapper — 3 coups : K.O. ; un coup à terre : il s'envole")
+				then "Frapper · 3 coups le mettent à terre, un de plus l'envoie dans le vide"
+				else "R2 frapper · 3 coups le mettent à terre, un de plus l'envoie dans le vide")
 			else ""
 		-- L'issue d'un duel du Ventre, pour tout le monde, quelques secondes.
 		local issue = workspace:GetAttribute(Config.goulag.resultAttribute)

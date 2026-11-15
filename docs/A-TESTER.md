@@ -849,3 +849,37 @@ Sur ton téléphone (le jeu publié) :
 Vérifié seul dans Studio (en mode édition) : la cause du tremblement,
 l'échelle recalculée à chaque image qui ne se posait jamais. La correction,
 elle, n'a **pas été vue à l'écran** (Studio n'a pas voulu lancer la partie).
+
+## Le jeu en anglais, les notifications (15 novembre 2026)
+
+Vérifié par le calcul : les tests traduisent les textes tels que le jeu les
+compose, et refusent tout nom de `Config` sans anglais. **Jamais vu à
+l'écran** : Studio n'a pas voulu lancer de partie.
+
+1. **En anglais** : règle la langue de ton compte Roblox sur English, lance
+   le jeu. Le salon, la boutique, la partie, les messages et les invites
+   sont-ils en anglais ? Un texte resté en français ? Note-le moi : dans
+   Studio, la console l'écrit (« Pas traduit : … »).
+2. **En français** : rien n'a changé.
+3. **Les cachettes** ont un vrai nom sur l'invite (« Dessous du pont »,
+   « Conteneur », plus de numéro).
+4. **Les notifications** ne marcheront qu'après les trois réglages de la
+   fiche de lancement (§ 7) et 100 visites.
+
+## Les textes réécrits (15 novembre 2026, soir)
+
+Vérifié par le calcul : les 724 tests passent, dont la traduction des
+nouvelles phrases telles que le jeu les compose. **Jamais vu à l'écran** :
+Studio est resté bloqué au lancement de la partie.
+
+1. **Le tutoriel du salon** : les six panneaux se lisent en entier, sans
+   texte coupé ni trop petit ?
+2. **En partie, sous la barre du sac** : choisis chaque objet. La phrase
+   (« Planches — barricade ta cachette de l'intérieur · L2 : utiliser »)
+   reste lisible sur une ligne, à la télé comme sur téléphone ?
+3. **La peur** : quand l'Œil te repère (« IL TE VOIT », « IL TE TRAQUE »),
+   quand il apprend un pouvoir, quand tu es avalé. Ça fait monter la
+   pression, ou c'est trop ?
+4. **Le Ventre** : « Un seul en ressort » se comprend sans autre
+   explication ?
+5. **Une phrase qui sonne faux** : note-la, on la change.

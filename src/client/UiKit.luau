@@ -12,6 +12,7 @@ local TweenService = game:GetService("TweenService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
+local Lang = require(Royale:WaitForChild("Lang"))
 
 local UiKit = {}
 
@@ -25,13 +26,7 @@ local rgb = UiKit.rgb
 -- En capitales, accents compris (string.upper laisse « é » en minuscule :
 -- « LéGENDAIRE », vu en image).
 function UiKit.upper(s: string): string
-	local out = string.upper(s)
-	for low, up in
-		{ ["é"] = "É", ["è"] = "È", ["ê"] = "Ê", ["à"] = "À", ["ç"] = "Ç", ["ô"] = "Ô" }
-	do
-		out = string.gsub(out, low, up)
-	end
-	return out
+	return Lang.upper(s)
 end
 
 function UiKit.round(f: GuiObject, px: number)

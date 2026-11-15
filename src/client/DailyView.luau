@@ -25,6 +25,7 @@ local Config = require(Royale:WaitForChild("Config"))
 
 local ButtonIcons = require(script.Parent.ButtonIcons)
 local ItemThumb = require(script.Parent.ItemThumb)
+local NotifyPrompt = require(script.Parent.NotifyPrompt)
 local UiKit = require(script.Parent.UiKit)
 
 local DailyView = {}
@@ -271,6 +272,9 @@ function DailyView.start()
 	local shownAt = 0
 	local spinning: RBXScriptConnection? = nil
 	local function close()
+		if gui.Enabled then
+			NotifyPrompt.ask()
+		end
 		gui.Enabled = false
 		ContextActionService:UnbindAction("RoyaleQuotidienFermer")
 		if spinning then

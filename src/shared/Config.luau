@@ -664,6 +664,20 @@ Config.hiding = {
 	seatSpacing = 2,
 	-- Un abri ferme (voiture, armoire, casier...) : une seule personne.
 	defaultCapacity = 1,
+	-- Le nom montre au joueur (invite, « Caché (...) »), par nom de modele
+	-- sans son numero : les modeles portent des noms collés (« DessousDePont3 »).
+	displayNames = {
+		Tole = "Tôle",
+		DessousDePont = "Dessous du pont",
+		SousLesGradins = "Sous les gradins",
+		SousLaCoque = "Sous la coque",
+		CryptChapelle = "Crypte de la chapelle",
+		CaleDuCargo = "Cale du cargo",
+		CamionPort = "Camion",
+		ChambreFroide = "Chambre froide",
+		TrainFantome = "Train fantôme",
+		Egout = "Égout",
+	},
 	-- L'invite : son texte, par sorte de cachette.
 	defaultAction = "Se cacher",
 	actionText = { Egout = "Descendre dans l'égout" },
@@ -937,11 +951,14 @@ Config.rarities = {
 -- Le catalogue (CONCEPT.md, valide le 12 novembre, a equilibrer en jouant).
 -- `kind` : throw (L2 maintenu, on lance), use (L2, effet sur soi ou devant
 -- soi), spot (L2 pres d'une cachette ou dedans), passive (rien a faire).
+-- `blurb` : ce qu'il fait, en quelques mots, sous la barre du sac (sans
+-- chiffre : les chiffres vivent dans les champs, et changeraient sans lui).
 -- `shield` : combien de secondes, au mieux, il protege de l'Oeil ; c'est la
 -- duree de son effet (le test d'equilibrage et les bots le lisent).
 Config.items = {
 	smoke = {
 		name = "Fumigène",
+		blurb = "un nuage qui l'empêche de te voir",
 		rarity = "common",
 		kind = "throw",
 		-- Un nuage qui coupe la ligne de vue 15 s (CONCEPT.md) : une boule de
@@ -952,6 +969,7 @@ Config.items = {
 	},
 	firecracker = {
 		name = "Pétard",
+		blurb = "un vacarme qui l'attire ailleurs",
 		rarity = "common",
 		kind = "throw",
 		-- Un bruit enorme : l'Oeil l'entend a tout Regard (CONCEPT.md).
@@ -960,6 +978,7 @@ Config.items = {
 	},
 	flare = {
 		name = "Fusée éclairante",
+		blurb = "attire un faisceau, colle à qui la reçoit",
 		rarity = "common",
 		kind = "throw",
 		-- Attire un faisceau ; tombee a moins de `stickRadius` d'un joueur,
@@ -970,6 +989,7 @@ Config.items = {
 	},
 	chalk = {
 		name = "Craie",
+		blurb = "marque une cachette : il viendra l'arracher",
 		rarity = "common",
 		kind = "spot",
 		-- Marque la cachette : l'Oeil vient l'arracher a sa prochaine
@@ -978,6 +998,7 @@ Config.items = {
 	},
 	bottle = {
 		name = "Bouteille",
+		blurb = "assomme qui la reçoit",
 		rarity = "common",
 		kind = "throw",
 		-- Etourdit 1 s qui est a moins de `radius` du point de chute.
@@ -987,6 +1008,7 @@ Config.items = {
 	},
 	oil = {
 		name = "Flaque d'huile",
+		blurb = "qui court dessus s'étale",
 		rarity = "common",
 		kind = "throw",
 		-- Qui court dessus glisse et tombe 1,5 s ; la flaque reste 20 s.
@@ -997,6 +1019,7 @@ Config.items = {
 	},
 	torch = {
 		name = "Lampe torche",
+		blurb = "éblouit le joueur en face",
 		rarity = "common",
 		kind = "use",
 		-- Ebloui 2 s, le joueur devant soi a moins de 25 studs.
@@ -1006,6 +1029,7 @@ Config.items = {
 	},
 	bell = {
 		name = "Clochette",
+		blurb = "sonne quand quelqu'un entre dans la cachette",
 		rarity = "common",
 		kind = "spot",
 		-- Sonne quand quelqu'un y entre : tous ceux a moins de `hearRadius`
@@ -1016,6 +1040,7 @@ Config.items = {
 	},
 	bat = {
 		name = "Batte",
+		blurb = "met K.O. en deux coups",
 		rarity = "uncommon",
 		kind = "use",
 		-- K.O. en deux coups au lieu de trois, pour `charges` coups qui
@@ -1026,6 +1051,7 @@ Config.items = {
 	},
 	trap = {
 		name = "Piège à loup",
+		blurb = "piège la sortie d'une cachette",
 		rarity = "uncommon",
 		kind = "spot",
 		-- Bloque 3 s celui qui sort de la cachette.
@@ -1034,6 +1060,7 @@ Config.items = {
 	},
 	binoculars = {
 		name = "Jumelles",
+		blurb = "repère au loin tous ceux à découvert",
 		rarity = "uncommon",
 		kind = "use",
 		-- Les joueurs a decouvert jusqu'a 250 studs, signales 5 s.
@@ -1043,6 +1070,7 @@ Config.items = {
 	},
 	planks = {
 		name = "Planches",
+		blurb = "barricade ta cachette de l'intérieur",
 		rarity = "uncommon",
 		kind = "spot",
 		-- Barricade sa cachette 20 s, de l'interieur : personne ne la deloge.
@@ -1051,6 +1079,7 @@ Config.items = {
 	},
 	fakeBox = {
 		name = "Carton piégé",
+		blurb = "une fausse cachette qui livre qui y entre",
 		rarity = "uncommon",
 		kind = "use",
 		-- Une fausse cachette posee devant soi : qui y entre est ejecte et
@@ -1061,6 +1090,7 @@ Config.items = {
 	},
 	stinkBomb = {
 		name = "Boule puante",
+		blurb = "fait sortir qui se cache près de l'impact",
 		rarity = "uncommon",
 		kind = "throw",
 		-- Tombee a moins de `radius` d'une cachette : celui qui y est sort.
@@ -1071,6 +1101,7 @@ Config.items = {
 	},
 	net = {
 		name = "Filet",
+		blurb = "immobilise qui le reçoit",
 		rarity = "uncommon",
 		kind = "throw",
 		-- Immobilise 2 s qui est a moins de `radius` du point de chute.
@@ -1080,6 +1111,7 @@ Config.items = {
 	},
 	cloak = {
 		name = "Cape d'ombre",
+		blurb = "il met deux fois plus de temps à te voir",
 		rarity = "rare",
 		kind = "use",
 		-- La jauge monte moitie moins vite pendant 20 s : vaut 10 s de
@@ -1090,6 +1122,7 @@ Config.items = {
 	},
 	padlock = {
 		name = "Cadenas",
+		blurb = "verrouille une cachette solide",
 		rarity = "rare",
 		kind = "spot",
 		-- Comme les planches, 45 s, seulement dans une cachette solide.
@@ -1099,6 +1132,7 @@ Config.items = {
 	},
 	mirror = {
 		name = "Miroir",
+		blurb = "renvoie son faisceau sur un autre",
 		rarity = "rare",
 		kind = "use",
 		-- Renvoie le faisceau qui te poursuit vers le joueur le plus proche ;
@@ -1108,6 +1142,7 @@ Config.items = {
 	},
 	grapple = {
 		name = "Grappin",
+		blurb = "te hisse sur un rebord",
 		rarity = "rare",
 		kind = "use",
 		-- Un rebord jusqu'a 60 studs devant le regard ; on y monte en 0,8 s.
@@ -1117,6 +1152,7 @@ Config.items = {
 	},
 	adrenaline = {
 		name = "Adrénaline",
+		blurb = "tu cours vite et sans bruit",
 		rarity = "rare",
 		kind = "use",
 		-- 8 s : on court a la course (22, jamais plus vite que l'Oeil au
@@ -1128,6 +1164,7 @@ Config.items = {
 	},
 	leadSheet = {
 		name = "Bâche de plomb",
+		blurb = "immobile dessous, il ne te voit pas",
 		rarity = "epic",
 		kind = "use",
 		-- Immobile dessous, le faisceau ne voit pas pendant 10 s ; bouger plus
@@ -1138,6 +1175,7 @@ Config.items = {
 	},
 	dummy = {
 		name = "Mannequin",
+		blurb = "un leurre qu'il poursuit à ta place",
 		rarity = "epic",
 		kind = "use",
 		-- Pose devant soi, l'Oeil le prend pour un joueur et le poursuit 10 s.
@@ -1147,6 +1185,7 @@ Config.items = {
 	},
 	glassEye = {
 		name = "Œil de verre",
+		blurb = "vois les joueurs à travers les murs",
 		rarity = "epic",
 		kind = "use",
 		-- 15 s : les joueurs a moins de 80 studs, a travers les murs.
@@ -1156,6 +1195,7 @@ Config.items = {
 	},
 	redFlare = {
 		name = "Fusée rouge",
+		blurb = "attire tous ses faisceaux au même endroit",
 		rarity = "epic",
 		kind = "throw",
 		-- Tous les faisceaux sur un point pendant 5 s.
@@ -1164,6 +1204,7 @@ Config.items = {
 	},
 	stolenGaze = {
 		name = "Le Regard volé",
+		blurb = "tu diriges un de ses faisceaux",
 		rarity = "legendary",
 		kind = "use",
 		-- 10 s : on dirige un faisceau la ou l'on regarde.
@@ -1172,6 +1213,7 @@ Config.items = {
 	},
 	tear = {
 		name = "La Larme de l'Œil",
+		blurb = "il pleure : plus aucun faisceau, partout",
 		rarity = "legendary",
 		kind = "use",
 		-- Il cligne : tous les faisceaux s'eteignent 5 s, partout.
@@ -1180,6 +1222,7 @@ Config.items = {
 	},
 	cocoon = {
 		name = "Le Cocon de secours",
+		blurb = "te recrache une fois s'il t'aspire",
 		rarity = "legendary",
 		kind = "passive",
 		-- Aspire, recrache aussitot sur place (une fois). Ne marche plus a
@@ -1189,6 +1232,7 @@ Config.items = {
 	},
 	fragment = {
 		name = "Le Fragment de Fissure",
+		blurb = "invisible pour lui, mais tu brilles pour les autres",
 		rarity = "legendary",
 		kind = "use",
 		-- 15 s invisible pour l'Oeil, mais tu brilles pour les joueurs.
@@ -1786,25 +1830,25 @@ Config.lobby = {
 			{
 				art = "eye",
 				title = "L'ŒIL",
-				text = "Ouvert, il chasse. Ne reste pas dans sa lumière.",
+				text = "Quand il s'ouvre, il chasse. Ne croise jamais sa lumière.",
 				buttons = {},
 			},
 			{
 				art = "hide",
 				title = "SE CACHER",
-				text = "Chaque cachette a ses places. Elles sont toutes ici.",
+				text = "Chaque cachette a ses places. Prends la tienne avant les autres.",
 				buttons = { { "onFoot", "interact", "entrer" } },
 			},
 			{
 				art = "crouch",
 				title = "SE FAIRE PETIT",
-				text = "Accroupi ou allongé, on se voit moins.",
+				text = "Accroupi ou allongé, il a plus de mal à te voir.",
 				buttons = { { "onFoot", "posture", "maintenu : s'allonger" } },
 			},
 			{
 				art = "loot",
 				title = "FOUILLER",
-				text = "Les meubles cachent des objets.",
+				text = "Les meubles cachent de quoi survivre.",
 				buttons = {
 					{ "onFoot", "interact", "maintenu" },
 					{ "onFoot", "useItem", "utiliser" },
@@ -1813,13 +1857,13 @@ Config.lobby = {
 			{
 				art = "fight",
 				title = "SE DÉFENDRE",
-				text = "Frappe ou pousse qui te gêne.",
+				text = "Frappe ou pousse : ici, tout le monde veut ta place.",
 				buttons = { { "onFoot", "hit", "frapper" }, { "onFoot", "shove", "pousser" } },
 			},
 			{
 				art = "win",
 				title = "GAGNER",
-				text = "Reste dans le cercle. Aspiré ? Le Ventre te laisse une chance.",
+				text = "Reste dans le cercle. Aspiré ? Le Ventre t'offre une dernière chance.",
 				buttons = {},
 			},
 		},
@@ -4335,8 +4379,56 @@ Config.challenges = {
 -- Le classement (CONCEPT.md) : les victoires, dans un OrderedDataStore, sur
 -- un panneau du salon (mis a jour toutes les 2 minutes : le DataStore
 -- limite les lectures).
+-- La langue (choisie avec Josh le 15 novembre 2026) : le jeu s'ecrit en
+-- francais ; tout joueur dont la langue Roblox ne commence pas par ce prefixe
+-- le voit en anglais (Strings, Lang, Localizer). L'anglais d'abord : c'est la
+-- plus grande part des joueurs ; la traduction automatique de Roblox pour
+-- les autres langues reste a voir.
+Config.lang = {
+	sourcePrefix = "fr",
+	-- Au-dela de ce nombre de textes retenus, la memoire des traductions se
+	-- vide (les comptes a rebours en font un nouveau chaque seconde).
+	cacheSize = 600,
+}
+
+-- Les notifications (choisies avec Josh le 15 novembre 2026). Roblox les
+-- envoie hors du jeu (telephone, site) a qui les a acceptees (13 ans et
+-- plus), une par jour et par joueur au plus, et seulement apres 100 visites.
+-- Il faut, cote Creator Hub (Josh) : les deux textes de notification (leur
+-- identifiant ici), une cle Open Cloud avec le droit « notifications » rangee
+-- dans les secrets de l'experience sous `secretName`, et les requetes HTTP
+-- permises. Tant qu'un identifiant vaut "", le service ne fait rien.
+Config.notifications = {
+	secretName = "RoyaleNotifications",
+	url = "https://apis.roblox.com/cloud/v2/users/%d/notifications",
+	messages = {
+		-- « Ta récompense du jour t'attend » (aucun parametre).
+		daily = "",
+		-- « {userId-friend} joue à ... » : le nom de l'ami, rempli par Roblox.
+		friend = "",
+	},
+	-- Le rappel du jour part aux absents vus il y a entre ces deux durees
+	-- (heures) : assez tard pour ne pas deranger le lendemain matin, et pas
+	-- au-dela de deux rappels (un jour rate fait deja reculer d'une case).
+	remindAfterHours = 20,
+	remindUntilHours = 68,
+	-- Un serveur cherche les absents a ce rythme (s), par paquets de cette
+	-- taille : peu de lectures de DataStore, meme a des milliers de joueurs.
+	scanSeconds = 600,
+	scanBatch = 50,
+	-- A l'arrivee d'un joueur, ses amis Roblox (au plus ce nombre) sont
+	-- prevenus qu'il joue.
+	friendsMax = 20,
+	seenStore = "RoyaleVus1",
+	sentStore = "RoyaleRappels1",
+}
+
 Config.leaderboard = {
-	store = "RoyaleVictoires1",
+	-- Changer de nom remet le classement a zero (l'ancien reste stocke mais
+	-- n'est plus lu). 2 : le 15 novembre 2026, pour effacer les victoires de
+	-- test avant le lancement (demande par Josh). Passer a 3 le jour de
+	-- l'ouverture si les parties entre amis ne doivent pas y rester.
+	store = "RoyaleVictoires2",
 	size = 10,
 	refreshSeconds = 120,
 	boardWidth = 18,

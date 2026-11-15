@@ -648,8 +648,11 @@ local function tutorial()
 			label.TextScaled = true
 			label.TextColor3 = rgb(LB.colors.lantern)
 			label.TextStrokeTransparency = 0.3
-			label.Text =
-				string.format("%s\n%s", kind, if places > 1 then places .. " places" else "1 place")
+			label.Text = string.format(
+				"%s\n%s",
+				Config.hiding.displayNames[kind] or kind,
+				if places > 1 then places .. " places" else "1 place"
+			)
 			label.Parent = tag
 			tag.Parent = model
 			shown += 1

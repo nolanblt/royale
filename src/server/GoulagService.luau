@@ -367,7 +367,7 @@ local function resolve(duel: Duel, fallen: Roster.Actor, sudden: boolean)
 		eliminate(fallen)
 	end
 	if other == duel.bot then
-		announce(Roster.nameOf(fallen) .. " tombe face au Repris du Ventre")
+		announce(Roster.nameOf(fallen) .. " est dévoré par le Repris du Ventre")
 	elseif outcome == "saved" then
 		announce(Roster.nameOf(other) .. " jette " .. Roster.nameOf(fallen) .. " dans le vide")
 		save(other)

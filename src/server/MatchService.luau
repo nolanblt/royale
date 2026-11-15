@@ -28,7 +28,9 @@ local TeleportService = game:GetService("TeleportService")
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Circles = require(Royale:WaitForChild("Circles"))
 local Config = require(Royale:WaitForChild("Config"))
+local Lang = require(Royale:WaitForChild("Lang"))
 local Regards = require(Royale:WaitForChild("Regards"))
+local Strings = require(Royale:WaitForChild("Strings"))
 
 local DailyService = require(script.Parent.DailyService)
 local BatService = require(script.Parent.BatService)
@@ -43,6 +45,7 @@ local HidingService = require(script.Parent.HidingService)
 local GoulagService = require(script.Parent.GoulagService)
 local ItemService = require(script.Parent.ItemService)
 local LeaderboardService = require(script.Parent.LeaderboardService)
+local NotificationService = require(script.Parent.NotificationService)
 local LobbyService = require(script.Parent.LobbyService)
 local ProfileService = require(script.Parent.ProfileService)
 local ReprisService = require(script.Parent.ReprisService)
@@ -544,8 +547,14 @@ local function serveMatch()
 		end
 		task.wait(Config.lobby.returnRetrySeconds)
 	end
+	-- Le message d'exclusion est dessine par Roblox : le client ne peut pas le
+	-- traduire, le serveur le donne dans la langue de chacun.
+	local over = "La partie est finie. Relance le jeu pour revenir au salon."
+	local compiled = Lang.compile(Strings.en)
 	for _, player in realPlayers() do
-		player:Kick("La partie est finie. Relance le jeu pour revenir au salon.")
+		local french = string.sub(string.lower(player.LocaleId), 1, #Config.lang.sourcePrefix)
+			== Config.lang.sourcePrefix
+		player:Kick(if french then over else Lang.translate(compiled, over) or over)
 	end
 end
 
@@ -556,6 +565,7 @@ function MatchService.start()
 	ChallengeService.start()
 	DailyService.start()
 	LeaderboardService.start()
+	NotificationService.start(not isMatchServer())
 	BotService.start()
 	CombatService.start(remote(Config.remotes.gesture))
 	EyePowerService.start()

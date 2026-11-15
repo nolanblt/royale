@@ -237,7 +237,7 @@ function ItemService.trySearch(actor: Roster.Actor, part: BasePart): string?
 	Sfx.at("fouille", part)
 	ChallengeService.record(actor, "search")
 	if not filled[part] then
-		notify(actor, "Rien ici.")
+		notify(actor, "Rien. Juste de la poussière.")
 		return nil
 	end
 	local tableName = part:GetAttribute("Table")
@@ -585,7 +585,7 @@ local function useItem(actor: Roster.Actor, look: Vector3?): boolean
 		done = true
 	elseif id == "tear" then
 		EyeService.blink(def.seconds)
-		announce("L'Œil cligne : plus aucun faisceau pendant " .. def.seconds .. " s !")
+		announce("L'ŒIL PLEURE — il est aveugle pendant " .. def.seconds .. " s !")
 		done = true
 	elseif id == "fragment" then
 		actor:SetAttribute(FX.veiledAttribute, untilT)
@@ -789,7 +789,7 @@ local function save(actor: Roster.Actor): boolean
 	consume(actor, slot)
 	actor:SetAttribute(Config.eye.graceAttribute, serverNow() + Config.eye.graceSeconds)
 	actor:SetAttribute(Config.eye.exposureAttribute, 0)
-	notify(actor, "Le Cocon de secours te recrache !")
+	notify(actor, "Le Cocon te recrache ! Pas cette fois.")
 	announce(Roster.nameOf(actor) .. " est recraché par un Cocon de secours")
 	return true
 end
@@ -868,7 +868,7 @@ local function spawnRelic()
 	prompt.Triggered:Connect(take)
 	relicTake = take
 	workspace:SetAttribute(Config.relics.attribute, relic.Position)
-	announce("L'Œil lâche une Relique au milieu du cercle !")
+	announce("L'Œil laisse tomber une Relique au centre… un appât ?")
 	print("[Royale] Relique posée : " .. I[id].name)
 end
 
@@ -1152,7 +1152,7 @@ function ItemService.start(
 			task.defer(function()
 				HidingService.evict(spot)
 				EyeService.flag(actor)
-				notify(actor, "C'était un piège ! L'Œil t'a flairé.")
+				notify(actor, "Un piège ! Et l'Œil t'a flairé…")
 				HidingService.rip(spot, false)
 			end)
 		elseif spot.bell then

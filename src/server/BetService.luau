@@ -81,7 +81,7 @@ local function place(player: Player, thing: any)
 		friends = target ~= nil and friends(player, target),
 	})
 	if not ok or target == nil then
-		notify(player, why or "Impossible.")
+		notify(player, why or "Pari impossible.")
 		return
 	end
 	bets[id] = Roster.idOf(target)

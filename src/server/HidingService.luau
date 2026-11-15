@@ -163,6 +163,12 @@ local function busy(player: Roster.Actor): boolean
 		or player:GetAttribute(Config.squads.cocoonAttribute) == true
 end
 
+-- Le nom que voit le joueur : sans numero, en mots (Config.hiding.displayNames).
+local function displayName(model: Model): string
+	local base = string.gsub(model.Name, "%d+$", "")
+	return H.displayNames[base] or base
+end
+
 local function enter(player: Roster.Actor, spot: Spot)
 	if
 		not Roster.isAlive(player)
@@ -184,7 +190,7 @@ local function enter(player: Roster.Actor, spot: Spot)
 	spot.mark = burstSerial
 	spot.prompt.Enabled = #spot.occupants < spot.capacity
 	byPlayer[player] = spot
-	player:SetAttribute(H.hiddenAttribute, spot.model.Name)
+	player:SetAttribute(H.hiddenAttribute, displayName(spot.model))
 	root.Anchored = true
 	root.CFrame = seat(spot, #spot.occupants)
 	for _, callback in enterCallbacks do
@@ -201,7 +207,7 @@ local function makeSpot(model: Model, solid: boolean): Spot?
 	local holder = if #exits > 0 then exits[1] else inside
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.ActionText = H.actionText[(string.gsub(model.Name, "%d+$", ""))] or H.defaultAction
-	prompt.ObjectText = model.Name
+	prompt.ObjectText = displayName(model)
 	prompt.HoldDuration = H.enterHoldSeconds
 	prompt.MaxActivationDistance = H.promptDistance
 	prompt.RequiresLineOfSight = false

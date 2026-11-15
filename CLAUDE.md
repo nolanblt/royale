@@ -204,6 +204,14 @@ Rokit, StyLua, Selene, Lune, GitHub Actions, tous les chiffres dans
   le salon ne tremble plus (`LobbyView.refit` mesure à l'échelle 1, caché
   une image, quand le contenu change — une échelle recalculée à chaque
   image depuis une mesure réduite ne se pose jamais).
+- **15 novembre 2026, le lancement** : le jeu en anglais pour qui ne joue
+  pas en français (`Strings` dictionnaire, `Lang` motifs, `Localizer` qui
+  remplace chaque texte affiché ; dans Studio, la console écrit « Pas
+  traduit : … » ; pour essayer : `Localizer.force(true)` depuis un
+  `LocalScript` injecté) ; notifications (`NotificationService`,
+  `Reminders`, `NotifyPrompt` ; inactives tant que `Config.notifications`
+  n'a pas ses identifiants) ; classement remis à zéro ; vignettes et icône
+  dans `docs/vignettes` (`tools/Vignettes.luau`, `tools/vignettes.ps1`).
 
 ## La place et la recette
 

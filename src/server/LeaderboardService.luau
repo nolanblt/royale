@@ -150,7 +150,7 @@ local function refresh(text: TextLabel)
 		table.insert(lines, "(indisponible pour l'instant)")
 		warn("[Royale] Classement illisible : " .. tostring(err))
 	elseif #lines == 0 then
-		table.insert(lines, "Personne encore : à toi de gagner.")
+		table.insert(lines, "Personne ne lui a encore échappé. Sois le premier.")
 	end
 	text.Text = table.concat(lines, "\n")
 end

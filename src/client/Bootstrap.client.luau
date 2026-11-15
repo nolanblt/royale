@@ -17,6 +17,7 @@ local Controls = require(script.Parent.Controls)
 local GestureView = require(script.Parent.GestureView)
 local ItemView = require(script.Parent.ItemView)
 local LobbyScene = require(script.Parent.LobbyScene)
+local Localizer = require(script.Parent.Localizer)
 local LobbyView = require(script.Parent.LobbyView)
 local Hud = require(script.Parent.Hud)
 local PlayerListView = require(script.Parent.PlayerListView)
@@ -39,6 +40,9 @@ print(
 	)
 )
 
+-- La langue d'abord : chaque ecran construit ensuite se traduit des sa
+-- creation.
+Localizer.start()
 Hud.start()
 ZoneView.start()
 task.spawn(SkyView.start)

@@ -367,10 +367,10 @@ function ItemView.start()
 		end
 		local selDef = I[bag[sel]]
 		selectedName.Text = if selDef
-			then selDef.name .. (if selDef.kind == "throw"
-				then " — L2 maintenu : viser, lâcher : lancer"
-				elseif selDef.kind == "passive" then " — agit tout seul"
-				else " — L2 : utiliser")
+			then selDef.name .. " — " .. selDef.blurb .. (if selDef.kind == "throw"
+				then " · L2 maintenu : lancer"
+				elseif selDef.kind == "passive" then " · agit tout seul"
+				else " · L2 : utiliser")
 			else ""
 
 		-- Les effets en cours.
@@ -383,10 +383,13 @@ function ItemView.start()
 		end
 		add(FX.cloakAttribute, "Cape d'ombre")
 		add(FX.adrenalineAttribute, "Adrénaline")
-		add(FX.steerAttribute, "Tu diriges un faisceau — regarde où l'envoyer")
+		add(FX.steerAttribute, "Tu tiens son regard — choisis sa proie")
 		local sheet = player:GetAttribute(FX.sheetAttribute)
 		if sheet ~= nil then
-			table.insert(lines, if sheet then "Bâche : invisible" else "Bâche : ne bouge pas !")
+			table.insert(
+				lines,
+				if sheet then "Sous la bâche, il ne te voit pas" else "Bâche : ne bouge pas !"
+			)
 		elseif active(player, FX.veiledAttribute) then
 			add(FX.veiledAttribute, "Invisible pour l'Œil")
 		end
@@ -411,7 +414,7 @@ function ItemView.start()
 			and (root.Position - bell).Magnitude <= I.bell.hearRadius
 		then
 			text = string.format(
-				"Une clochette sonne, à %d m",
+				"Une clochette ! Quelqu'un se cache à %d m",
 				math.floor((root.Position - bell).Magnitude)
 			)
 		end

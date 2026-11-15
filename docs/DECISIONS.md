@@ -876,3 +876,59 @@ Les apparences n'étaient que des changements de couleur. Choisi avec Josh :
   l'échelle sautait de 0,43 à 0,47 à chaque image (mesuré dans Studio). La
   largeur se mesure maintenant à taille réelle, cachée le temps d'une
   image, seulement quand le contenu ou l'écran change.
+
+## Le lancement : anglais, notifications, vignettes, classement (15 novembre 2026)
+
+Demandé par Josh : traduire au moins en anglais, coder les notifications,
+préparer l'icône, les images et la vidéo, remettre le classement à zéro,
+proposer des noms.
+
+- **La traduction** se fait chez chaque joueur : le jeu reste écrit en
+  français, `Strings` donne l'anglais, `Lang` sait reconnaître un texte
+  composé (« Restants : 12 ») et `Localizer` remplace chaque texte affiché
+  (écrans, panneaux du monde, invites). Un joueur dont Roblox n'est pas en
+  français voit tout en anglais. **Décidé sans Josh** : l'anglais pour
+  toutes les autres langues (pas encore d'espagnol, de portugais…).
+  Le message d'exclusion de fin de partie, dessiné par Roblox, est traduit
+  par le serveur.
+- **Les noms de cachettes** s'affichaient tels que dans la carte
+  (« DessousDePont3 ») : ils ont maintenant un vrai nom
+  (`Config.hiding.displayNames`).
+- **Les notifications** : rappel de la récompense du jour aux absents
+  (20 à 68 h après leur dernière visite, une par jour, `Reminders`) et
+  « ton ami joue » aux amis Roblox (seulement depuis le salon). L'accord se
+  demande en fermant la récompense du jour. Rien ne part tant que Josh n'a
+  pas créé les textes, la clé et le secret (fiche de lancement, § 7).
+- **Le classement** est remis à zéro (`RoyaleVictoires2`).
+- **Les vignettes** : 4 images et une icône tirées de vraies captures de
+  Studio, mises en scène (`tools/Vignettes.luau`) et assemblées avec un
+  texte anglais (`tools/vignettes.ps1`). **Décidé sans Josh** : les textes
+  des vignettes (« Hide from the Eye », « It rips away your hiding spot »,
+  « Don't get seen », « Hide with your friends »).
+- **La vidéo** : pas d'outil vidéo sur la machine, un plan de tournage dans
+  la fiche de lancement.
+
+## Les textes du jeu réécrits (15 novembre 2026, soir)
+
+Josh trouvait les textes « un peu nuls » et m'a laissé tout reprendre :
+plus de pression, plus de peur, que ça sonne bien. **Décidé sans Josh, dans
+le détail** (il a donné la direction, pas les phrases) :
+
+- **L'Œil a une présence** : « IL TE VOIT », « IL TE TRAQUE — casse sa
+  ligne de vue ! », « L'ŒIL APPREND : … » (nouveau pouvoir), « L'ŒIL NE SE
+  FERMERA PLUS », « Il attend d'autres proies… », « L'Œil t'a avalé. »,
+  « L'Œil les a tous pris ».
+- **Le tutoriel du salon** parle de lui (« Quand il s'ouvre, il chasse. Ne
+  croise jamais sa lumière. ») et des autres joueurs (« ici, tout le monde
+  veut ta place »).
+- **Le Ventre** : « Un seul en ressort. Jette l'autre dans le vide. »
+- **Chaque objet dit à quoi il sert** sous la barre du sac
+  (`Config.items[...].blurb`, sans chiffre) : « Fumigène — un nuage qui
+  l'empêche de te voir · L2 maintenu : lancer ». C'était le plus gros manque.
+- **Les consignes raccourcies** (« Caché (Buisson) · X sortir · R2
+  jaillir ») ; « Restants » devient « Survivants ».
+- **Gardés tels quels** : les boutons, la boutique, le passe, les défis et
+  la récompense du jour (là, la clarté passe avant l'ambiance : il y a des
+  Robux en jeu), les noms d'objets, de zones et de cosmétiques, les titres
+  des Regards et les pouvoirs (déjà menaçants).
+- L'anglais suit chaque phrase (`Strings`).

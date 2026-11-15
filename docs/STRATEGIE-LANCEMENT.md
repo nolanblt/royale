@@ -5,6 +5,11 @@ s'appuie sur la documentation officielle de Roblox (la plus fiable) et sur
 des guides de créateurs (moins fiables : leurs chiffres sont des ordres de
 grandeur, je le signale à chaque fois).
 
+**Mise à jour du 15 novembre 2026 (fin d'après-midi)** : tes réponses aux
+questions sont notées (§ 6) ; vignettes, traduction anglaise, notifications,
+classement et noms proposés sont faits (§ 0, 7, 8) ; mon avis sur le budget
+(§ 10).
+
 **Mise à jour du 15 novembre 2026 (après-midi)** : le jeu se joue maintenant
 au téléphone (boutons en arc autour du saut, menus au doigt), la boutique et
 les récompenses quotidiennes sont refaites, l'autel a ses obélisques, la
@@ -17,7 +22,8 @@ reste avant de lancer est juste en dessous.
 
 **Fait** : tout le jeu prévu dans la fiche (carte, l'Œil, la zone, objets,
 escouades, salon, boutique, tirage, passe, quotidien, défis, classement,
-produits Robux, commandes tactiles). 702 vérifications automatiques passent.
+produits Robux, commandes tactiles, anglais, notifications). 721 vérifications
+automatiques passent.
 
 **Pas encore fait — à faire par toi (je ne peux pas)** :
 - [ ] **Jouer de vraies parties à plusieurs**, avec tes amis. Mes essais
@@ -30,18 +36,33 @@ produits Robux, commandes tactiles). 702 vérifications automatiques passent.
 - [ ] **Le questionnaire de maturité** sur Creator Hub.
 - [ ] **Publier la place** après chaque série de changements.
 
-**Pas encore fait — je peux le préparer** :
-- [ ] **L'icône et 3 à 5 images** (je peux monter les scènes et les prises
-      de vue dans Studio ; toi, tu fais la capture finale et l'envoi).
-- [ ] **Une courte vidéo** de jeu (scènes à filmer, même principe).
-- [ ] **Remettre le classement à zéro** juste avant l'ouverture (il contient
-      mes victoires de test).
-- [ ] **La langue** : le jeu est tout en français (question n°4).
-- [ ] **Les notifications** (question n°5).
-- [ ] **Le Discord** : salons et textes (question n°7).
+**Fait le 15 novembre 2026 (après-midi), à ta demande** :
+- [x] **3 icônes et 3 séries de 4 vignettes** (la dernière série et les
+      icônes 2 et 3 ajoutées le soir) : `docs/vignettes/` (voir le
+      LISEZMOI). Il te reste à choisir et à les envoyer dans Creator Hub.
+- [x] **Le jeu en anglais** pour tout joueur dont Roblox n'est pas réglé en
+      français (les textes, les objets, les messages, les invites).
+- [x] **Les notifications** (rappel de la récompense du jour, « ton ami
+      joue ») : codées, en attente de trois réglages de ta part (§ 7).
+- [x] **Le classement remis à zéro.** Tes parties entre amis vont y
+      apparaître : je le remets à zéro une dernière fois le jour de
+      l'ouverture si tu veux (un chiffre à changer).
+- [x] **Des noms proposés** (§ 8).
+- [ ] **La vidéo** : pas d'outil de montage vidéo sur la machine ; un plan
+      de tournage à suivre en jouant (§ 9).
+- Le Discord : pas pour le moment (ta décision). Les vidéos TikTok : non.
 
-**À trancher avec toi** : le nom (n°3), la date (n°2), le budget (n°6), qui
-filme (n°8).
+**À faire par toi pour finir** :
+- [x] Choisir le nom : **Hide From The Eye 👁️** (en français : « Cache-toi de l'Œil 👁️ »).
+- [ ] Envoyer l'icône choisie (l'Œil zoomé, `icones/1-oeil.png`) et le
+      mélange de vignettes proposé dans `docs/vignettes/LISEZMOI.md`.
+- [ ] Les trois réglages des notifications (§ 7).
+- [ ] Écrire le nom et la description du jeu en anglais dans Creator Hub
+      (la page se traduit à part du jeu).
+- Pas de vidéo au lancement, des photos seulement (ta décision).
+
+**Fait le 15 novembre 2026 (soir)** : les textes du jeu réécrits, plus
+menaçants, et chaque objet dit à quoi il sert (`DECISIONS.md`).
 
 ---
 
@@ -111,17 +132,17 @@ games that did not perform well at first »).
 
 | Signal | Ce qu'on a | Note |
 | --- | --- | --- |
-| Clic depuis l'accueil | Icône et images : **pas encore faites** | ⚠️ à faire avant le lancement |
-| Départ en moins de 3 min | Salon beau, panneaux, partie qui part vite, commandes tactiles | ✅ si l'essai au téléphone est bon ; ⚠️ jeu en français seulement |
+| Clic depuis l'accueil | Icône et 4 vignettes faites (`docs/vignettes`) | ✅ à envoyer |
+| Départ en moins de 3 min | Salon beau, panneaux, partie qui part vite, commandes tactiles | ✅ si l'essai au téléphone est bon ; anglais fait |
 | Revenir le lendemain | Récompenses quotidiennes (J2 épique), défis du jour | ✅ bien placé |
 | Revenir sur 28 jours | 4 semaines d'objets quotidiens, passe de ~4 semaines, défis hebdo | ✅ très bien aligné avec le 28 jours |
 | Temps de jeu | Parties de ~18 min, boucle « encore une » | ✅ |
 | Jouer entre amis | Duo, escouade, invitations, salon | ✅ |
 | Achats | Boutique, tirage, passe, crédits | ✅ |
 
-Le plus gros manque aujourd'hui : **l'icône et les images**, puis **la
-langue** (un joueur qui ne lit pas le français repart vite). Le téléphone
-est fait, à confirmer sur un vrai téléphone.
+Il ne manque plus de grosse pièce : icône, vignettes, anglais et
+téléphone sont faits. Restent les **parties entre amis** (le plaisir et la
+tenue à plusieurs) et l'**essai sur un vrai téléphone**.
 
 ---
 
@@ -233,6 +254,19 @@ correction du tremblement.
 
 ## 6. Questions pour toi (à trancher ensemble)
 
+*Tes réponses du 15 novembre 2026* : lancement **la semaine prochaine ou
+celle d'après**, quand c'est prêt ; un **nom très « méta »** (je propose,
+§ 8) ; **anglais** au moins (fait) ; **notifications** oui (codées) ;
+**budget** : seulement la pub Roblox, environ 10 € de test puis 20 € au
+lancement (mon avis : § 10) ; **pas de Discord** pour l'instant ; **pas de
+TikTok**.
+
+*Suite, le même jour* : nom retenu **Hide From The Eye 👁️**, avec sa
+traduction française dans Creator Hub (« Cache-toi de l'Œil 👁️ ») ;
+**pas de vidéo** au lancement, l'icône et les images suffisent ; budget
+pub **maintenu** (10 € puis 20 €), on regarde les chiffres, puis on
+remet de l'argent seulement s'ils sont bons.
+
 1. **Le téléphone.** *Tranché le 15 novembre 2026 : oui, et c'est fait ;
    à essayer sur ton téléphone.* On ajoute des commandes tactiles ? C'est indispensable
    pour que le jeu « pète » (c'est là qu'est la majorité des joueurs), mais
@@ -260,6 +294,92 @@ correction du tremblement.
 
 ---
 
+## 7. Les notifications : ce qu'il te reste à régler
+
+Le code est prêt (`NotificationService`, `Config.notifications`). Roblox
+exige trois choses de ton côté, que je ne peux pas faire à ta place :
+
+1. **Deux textes de notification** dans Creator Hub → ton jeu → Engagement
+   → Notifications (99 caractères au plus) :
+   - le rappel du jour, par exemple « Ta récompense du jour t'attend… et
+     l'Œil aussi. » ;
+   - l'ami qui joue, avec le mot `{userId-friend}` (Roblox y met le nom de
+     l'ami) : « {userId-friend} se cache de l'Œil. Rejoins-le ! ».
+   Tu me donnes leurs deux identifiants, je les colle dans `Config`.
+2. **Une clé Open Cloud** (Creator Hub → Open Cloud → API Keys) avec le
+   droit « notifications » sur ton jeu, et l'adresse IP `0.0.0.0/0`.
+3. **La ranger dans les secrets du jeu** (Creator Hub → ton jeu → Secrets)
+   sous le nom `RoyaleNotifications`, et autoriser les requêtes HTTP du jeu
+   (Studio → Game Settings → Security).
+
+Bon à savoir (officiel) : il faut **100 visites** avant que Roblox livre
+les notifications ; il en livre **une par jour et par joueur** au plus,
+seulement à qui l'a acceptée (13 ans et plus). Le jeu demande l'accord en
+fermant la récompense du jour, une fois par session.
+
+## 8. Les noms proposés
+
+Ce qui marche sur Roblox en 2026 (constaté sur les jeux en tête, pas une
+règle officielle) : **un nom court qui dit ce qu'on fait**, souvent un verbe
+(*Steal a Brainrot*, *Grow a Garden*, *99 Nights in the Forest*), un **emoji**
+qui se voit dans la liste, et plus tard une étiquette de mise à jour
+(« [UPD] »). Roblox déclasse les noms qui promettent des récompenses
+(« FREE ») et ceux trop proches d'un autre jeu (officiel).
+
+| Nom | Pour | Contre |
+| --- | --- | --- |
+| **Hide From The Eye 👁️** | Dit le jeu en 4 mots, colle aux vignettes | Un peu long |
+| **Don't Get Seen 👁️** | Court, une consigne | Ne dit pas « battle royale » |
+| **Last One Hidden Wins 👁️** | Dit le but et la compétition | 4 mots aussi |
+| **The Eye Is Watching 👁️** | Mystérieux, donne envie | Ne dit pas quoi faire |
+| **Eye Royale 👁️** | Très court | Ne dit pas « se cacher » |
+
+**Mon choix : Hide From The Eye 👁️.** C'est le plus clair pour quelqu'un
+qui fait défiler l'accueil en une seconde, et les vignettes le répètent. Le
+nom se traduit à part pour les joueurs français dans Creator Hub
+(« Cache-toi de l'Œil 👁️ »). Avant de le figer, taper le nom dans la
+recherche Roblox pour vérifier qu'aucun gros jeu ne le porte déjà.
+
+## 9. La vidéo : plan de tournage
+
+Je n'ai pas d'outil de capture vidéo ni de montage sur la machine. Le plus
+simple : jouer avec tes amis et enregistrer avec **Win + Alt + R** (la Xbox
+Game Bar de Windows), puis garder les 20 à 30 meilleures secondes :
+
+1. **L'Œil s'ouvre** au-dessus de la ville (2-3 s, la caméra vers le ciel).
+2. **Un faisceau balaie la rue** et frôle un joueur qui plonge dans un
+   buisson (3-4 s).
+3. **Une cachette arrachée** : le toit ou la voiture qui s'envole (3 s).
+4. **Quelqu'un aspiré** vers l'Œil (2-3 s).
+5. **Le Ventre** : un duel, on jette l'autre dans le vide (3 s).
+6. **La victoire** : « … a survécu à l'Œil » (2 s).
+
+Pas besoin de texte : la vidéo doit **montrer ce que promettent les
+vignettes**. Roblox dit que c'est ce qui réduit les départs rapides.
+
+## 10. La pub : mon avis sur ton budget
+
+- **10 € de test puis 20 € au lancement, c'est un bon début, mais petit.**
+  Ça donnera quelques centaines de visites au plus (les coûts varient beaucoup
+  selon les créateurs ; Roblox ne publie pas de chiffre fixe). C'est assez
+  pour comparer deux vignettes, pas pour faire décoller le jeu.
+- **Le minimum** est affiché dans Ads Manager à la création de la campagne
+  (la doc officielle parle d'au moins 1 crédit publicitaire ; je n'ai pas
+  trouvé de minimum journalier officiel à jour).
+- **Pour tester les vignettes, pas besoin de pub** (corrigé le 15 novembre
+  au soir) : Roblox a un test gratuit, la « personnalisation des vignettes »
+  (annonce officielle de février 2025). Dans Creator Hub → Places →
+  Thumbnails → onglet **Home Page**, on met de 2 à 5 vignettes en
+  « actives » ; Roblox les montre à tour de rôle sur l'accueil et garde
+  surtout celle qui fait le plus cliquer, en quelques heures. **L'icône,
+  elle, n'a pas de test** : on la choisit, ou on en change à la main une
+  semaine chacune. Plan proposé : les trois principales des trois séries
+  (`docs/vignettes`) en actives.
+- **La pub ne compte pas pour l'algorithme** (officiel) : ce qui fera
+  monter le jeu, c'est que les joueurs restent et reviennent. Donc d'abord
+  tes amis (et les 100 visites qu'il faut pour les notifications), ensuite
+  la pub.
+
 ## Sources
 
 - [Discovery — documentation officielle Roblox](https://create.roblox.com/docs/discovery)
@@ -270,6 +390,13 @@ correction du tremblement.
 - [Roblox Curation : comment on choisit les jeux de Today's Picks (forum Roblox)](https://devforum.roblox.com/t/roblox-curation-how-do-we-consider-games-for-today%E2%80%99s-picks/4005089)
 - [Ads for Creators : RDC Recap (forum Roblox)](https://devforum.roblox.com/t/ads-for-creators-rdc-recap-and-what%E2%80%99s-next/3929106)
 - [Ads Manager — documentation officielle](https://create.roblox.com/docs/production/promotion/sponsoring-experiences)
+- [Personnalisation des vignettes (annonce officielle, forum Roblox)](https://devforum.roblox.com/t/live-now-personalize-your-thumbnails-to-attract-more-users/3257233)
+- [Pas d'API Open Cloud pour l'icône ni pour lire le test des vignettes (forum Roblox)](https://devforum.roblox.com/t/new-opencloud-apis-for-analytics-events-experiments-and-thumbnail-personalization/4828676)
+- [Advertising (Open Cloud) — documentation officielle](https://create.roblox.com/docs/cloud/guides/advertising)
+- [Notifications d'expérience (Open Cloud) — documentation officielle](https://create.roblox.com/docs/cloud/guides/experience-notifications)
+- [Requêtes HTTP dans le jeu — documentation officielle](https://create.roblox.com/docs/en-us/cloud-services/http-service)
+- [Open Cloud depuis HttpService (forum Roblox)](https://devforum.roblox.com/t/beta-use-open-cloud-via-httpservice-without-proxies/3656373)
+- [Roblox Ads in 2026 (RoWatcher, guide non officiel)](https://rowatcher.com/news/roblox-ads-in-2026-the-minimum-budget-that-actually-works)
 - [Dubit — What makes a new Roblox game take off?](https://dubit.io/library/what-makes-a-new-roblox-game-take-off)
 - [RoWatcher — How to Launch a Roblox Game in 2026: The Pre-Launch Playbook](https://rowatcher.com/news/how-to-launch-a-roblox-game-in-2026-the-pre-launch-playbook) (guide, chiffres non officiels)
 - [Grow a Garden : un jeu viral (Dexerto)](https://www.dexerto.com/tiktok/who-is-jandel-on-tiktok-grow-a-garden-roblox-game-creator-goes-viral-3227238/)
