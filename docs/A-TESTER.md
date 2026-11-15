@@ -883,3 +883,20 @@ Studio est resté bloqué au lancement de la partie.
 4. **Le Ventre** : « Un seul en ressort » se comprend sans autre
    explication ?
 5. **Une phrase qui sonne faux** : note-la, on la change.
+
+## Jouer entre amis (16 novembre 2026)
+
+Vérifié par le calcul : 742 tests (le salon, les équipes coupées, la
+traduction). **Jamais vu à l'écran** : Studio est resté bloqué au lancement
+(le fermer et le rouvrir).
+
+1. **Solo entre amis** : formez un groupe, choisissez Solo (Y), le chef
+   appuie sur Prêt. Vous arrivez dans la même partie, chacun pour soi ?
+2. **Partie privée** : croix droite (P au clavier). La pastille du haut
+   passe à « SOLO · PRIVÉE + BOTS », puis « PRIVÉE SANS BOTS », puis revient.
+   Le chef appuie sur Prêt : « Partie privée dans 5 s », et vous partez seuls
+   (avec des bots ou non) ?
+3. **En privée** (avec ou sans bots), la victoire ne compte pas au
+   classement : c'est voulu, seules les parties publiques comptent.
+4. **Au téléphone** : le nouveau bouton « Publique / privée » se touche, et
+   la rangée de boutons tient dans l'écran ?

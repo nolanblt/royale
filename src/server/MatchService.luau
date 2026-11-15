@@ -252,8 +252,10 @@ local function resetAll()
 	workspace:SetAttribute(Config.eye.warningAttribute, false)
 end
 
--- Une partie avec ces joueurs, ce mode et ces groupes (venus du salon).
-local function playOnce(humans: { Player }, mode: string, groups: { { Player } })
+-- Une partie avec ces joueurs, ce mode, ces groupes et cette
+-- confidentialite (venus du salon).
+local function playOnce(humans: { Player }, mode: string, groups: { { Player } }, privacy: string)
+	local rules = Config.lobby.privacyRules[privacy] or Config.lobby.privacyRules.public
 	resetAll()
 	SquadService.setMode(mode)
 	for _, player in humans do
@@ -269,6 +271,10 @@ local function playOnce(humans: { Player }, mode: string, groups: { { Player } }
 	local size = SquadService.size()
 	total = math.min(math.ceil(total / size) * size, Config.bots.totalMax)
 	local players: { Roster.Actor } = table.clone(humans)
+	-- Une partie privee sans bots : seulement le groupe.
+	if not rules.bots then
+		total = #humans
+	end
 	for _, bot in BotService.spawn(math.max(total - #humans, 0), waitingSpot) do
 		table.insert(players, bot)
 	end
@@ -419,10 +425,11 @@ local function playOnce(humans: { Player }, mode: string, groups: { { Player } }
 	-- Ce que la partie rapporte a chaque vrai joueur (CONCEPT.md).
 	for _, player in humans do
 		if player.Parent then
+			-- Sans bots, une victoire ne compte pas (Config.lobby.privacyRules).
 			ProfileService.grant(player, {
 				regard = SquadService.regardOf(player),
-				won = table.find(winners, player) ~= nil,
-				place = SquadService.placeOf(player),
+				won = rules.ranked and table.find(winners, player) ~= nil,
+				place = if rules.ranked then SquadService.placeOf(player) else nil,
 				betWon = BetService.won(player),
 			})
 		end
@@ -451,10 +458,10 @@ end
 
 -- Le salon a lance un depart : sur place dans Studio, sur un serveur
 -- reserve dans le jeu publie (ReserveServer ne marche pas dans Studio).
-local function launch(players: { Player }, mode: string, groups: { { Player } })
+local function launch(players: { Player }, mode: string, groups: { { Player } }, privacy: string)
 	if RunService:IsStudio() then
 		LobbyService.setAway(players, true)
-		local ok, err = pcall(playOnce, players, mode, groups)
+		local ok, err = pcall(playOnce, players, mode, groups, privacy)
 		if not ok then
 			warn("[Royale] La partie s'est arrêtée sur une erreur : " .. tostring(err))
 			resetAll()
@@ -479,7 +486,7 @@ local function launch(players: { Player }, mode: string, groups: { { Player } })
 	local code = TeleportService:ReserveServer(game.PlaceId)
 	local options = Instance.new("TeleportOptions")
 	options.ReservedServerAccessCode = code
-	options:SetTeleportData({ mode = mode, groups = ids, expected = #players })
+	options:SetTeleportData({ mode = mode, groups = ids, expected = #players, privacy = privacy })
 	TeleportService:TeleportAsync(game.PlaceId, players, options)
 end
 
@@ -521,7 +528,10 @@ local function serveMatch()
 			end
 		end
 	end
-	local ok2, err2 = pcall(playOnce, realPlayers(), mode, groups)
+	local privacy = if typeof(data) == "table" and Config.lobby.privacyRules[data.privacy]
+		then data.privacy
+		else Config.lobby.privacies[1]
+	local ok2, err2 = pcall(playOnce, realPlayers(), mode, groups, privacy)
 	if not ok2 then
 		warn("[Royale] La partie s'est arrêtée sur une erreur : " .. tostring(err2))
 	end

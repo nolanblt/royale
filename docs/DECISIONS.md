@@ -932,3 +932,24 @@ le détail** (il a donné la direction, pas les phrases) :
   Robux en jeu), les noms d'objets, de zones et de cosmétiques, les titres
   des Regards et les pouvoirs (déjà menaçants).
 - L'anglais suit chaque phrase (`Strings`).
+
+## Jouer entre amis : le mode libre et la partie privée (16 novembre 2026)
+
+Demandé par Josh : « jouer en solo avec des gens, mais aussi en partie
+privée avec ou sans bots au choix ».
+
+- **Tout groupe peut choisir tout mode.** En Solo, un groupe de 4 part dans
+  la même partie, chacun pour soi ; en Duo, un groupe de 3 fait une équipe
+  de 2 et le troisième est complété par un bot (`Squads.assignGroups`
+  coupait déjà un groupe trop grand).
+- **Partie publique / privée + bots / privée sans bots** : un bouton au salon
+  (croix droite à la manette, P au clavier), affiché dans la pastille du mode
+  (« SOLO · PRIVÉE + BOTS »). Une partie privée part seule, 5 s après le
+  « Prêt » du chef (`Config.lobby.privateCountdownSeconds`).
+- **Décidé par Josh : seules les parties publiques comptent.** Une partie
+  privée, avec ou sans bots, ne donne ni victoire au classement, ni défi
+  « gagner », ni récompense de victoire, ni fragments de place ; l'XP et les
+  crédits du temps joué, oui (`Config.lobby.privacyRules`). Sinon deux
+  comptes d'un même joueur se donneraient la victoire à tour de rôle.
+- Seul en privée sans bots : la partie va jusqu'au bout, l'Œil finit par
+  prendre tout le monde (un entraînement).

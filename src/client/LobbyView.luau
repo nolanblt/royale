@@ -15,6 +15,7 @@ local SocialService = game:GetService("SocialService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
+local Lang = require(Royale:WaitForChild("Lang"))
 
 local ButtonIcons = require(script.Parent.ButtonIcons)
 local ShopView = require(script.Parent.ShopView)
@@ -394,6 +395,10 @@ function LobbyView.start()
 		remote:FireServer("mode")
 		return true
 	end)
+	bind("RoyaleSalonPrivee", K.privacy, function()
+		remote:FireServer("privacy")
+		return true
+	end)
 	bind("RoyaleSalonPret", K.ready, function()
 		remote:FireServer("ready")
 		return true
@@ -440,6 +445,10 @@ function LobbyView.start()
 		local mode = player:GetAttribute(LB.modeAttribute)
 		local ready = player:GetAttribute(LB.readyAttribute) == true
 		local modeName = if typeof(mode) == "string" then LB.modeNames[mode] or mode else "?"
+		local privacy = player:GetAttribute(LB.privacyAttribute)
+		local privacyName = if typeof(privacy) == "string" and privacy ~= LB.privacies[1]
+			then LB.privacyNames[privacy]
+			else nil
 		local A = Config.progression.attributes
 		local level = player:GetAttribute(A.level)
 		if typeof(level) == "number" then
@@ -460,7 +469,11 @@ function LobbyView.start()
 		end
 		local members = if typeof(group) == "string" then group else player.DisplayName
 		local count = #string.split(members, ", ")
-		modeText.Text = string.upper(modeName)
+		-- Une partie privee se lit dans la pastille du mode (« SOLO · PRIVÉE +
+		-- BOTS ») : c'est elle qu'on regarde avant de se dire pret.
+		modeText.Text = Lang.upper(
+			if privacyName then string.format("%s · %s", modeName, privacyName) else modeName
+		)
 		groupText.Text =
 			string.format("%s  %d/%d", if count > 1 then members else "Seul", count, LB.maxGroup)
 		readyText.Text = if ready then "PRÊT" else "PAS PRÊT"
@@ -477,6 +490,7 @@ function LobbyView.start()
 				action = "RoyaleSalonPret",
 			},
 			{ binding = K.mode, text = "Mode", action = "RoyaleSalonMode" },
+			{ binding = K.privacy, text = "Publique / privée", action = "RoyaleSalonPrivee" },
 			-- Inviter se fait sur l'invite au-dessus d'un joueur (on la touche).
 			{
 				binding = K.invite,
@@ -530,6 +544,14 @@ function LobbyView.start()
 				)
 				text = if text == "" then line else text .. "\n" .. line
 			end
+		end
+		local private = player:GetAttribute(LB.privateDepartAttribute)
+		if typeof(private) == "number" then
+			local line = string.format(
+				"Partie privée dans %d s",
+				math.max(0, math.ceil(private - workspace:GetServerTimeNow()))
+			)
+			text = if text == "" then line else text .. "\n" .. line
 		end
 		local reward = recent(
 			player:GetAttribute(Config.progression.attributes.lastReward),

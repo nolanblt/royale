@@ -125,6 +125,8 @@ Config.controls = {
 			playerList = { gamepad = "ButtonR3", keyboard = "Tab" },
 			-- La boutique (avec les tirages, le passe et ses cosmetiques).
 			shop = { gamepad = "DPadLeft", keyboard = "O" },
+			-- Publique, privee avec bots, privee sans bots (Config.lobby.privacies).
+			privacy = { gamepad = "DPadRight", keyboard = "P" },
 		},
 		-- Dans le panneau de la boutique : on choisit a la croix, on change
 		-- d'onglet avec L1 / R1, A achete ou equipe, B ferme.
@@ -1963,6 +1965,30 @@ Config.lobby = {
 	-- Les modes, dans l'ordre ou Y les fait defiler.
 	modes = { "solo", "duo", "squad" },
 	modeNames = { solo = "Solo", duo = "Duo", squad = "Escouade" },
+	-- La partie privee (choisie avec Josh le 16 novembre 2026 : « avec ou sans
+	-- bots au choix »). Publique : on part avec les autres groupes prets du
+	-- meme mode. Privee : le groupe part seul, des que le chef est pret, avec
+	-- ou sans bots. Le premier est celui de chaque nouveau groupe.
+	privacies = { "public", "privateBots", "privateAlone" },
+	privacyNames = {
+		public = "Publique",
+		privateBots = "Privée + bots",
+		privateAlone = "Privée sans bots",
+	},
+	-- `bots` : les bots completent la partie. `ranked` : la victoire compte
+	-- (classement, defis, recompense de victoire et fragments de place).
+	-- Decide par Josh le 16 novembre 2026 : seules les parties publiques
+	-- comptent ; une partie privee, avec ou sans bots, reste un entrainement
+	-- (XP et credits du temps joue). Sans quoi deux comptes d'un meme joueur
+	-- se donneraient la victoire a tour de role.
+	privacyRules = {
+		public = { bots = true, ranked = true },
+		privateBots = { bots = true, ranked = false },
+		privateAlone = { bots = false, ranked = false },
+	},
+	-- Une partie privee part peu apres le « pret » du chef : le temps de se
+	-- raviser sur un appui de trop, pas d'attendre des inconnus.
+	privateCountdownSeconds = 5,
 	-- Attributs : sur le joueur, son groupe (le nom du chef), son mode, s'il
 	-- est pret, l'invitation recue (« nom|heure ») ; sur Workspace, le
 	-- compte a rebours (« mode|heure de depart »).
@@ -1971,6 +1997,10 @@ Config.lobby = {
 	readyAttribute = "Pret",
 	inviteAttribute = "Invitation",
 	countdownAttribute = "Depart",
+	-- Sur le joueur : la confidentialite de son groupe, et l'heure de depart
+	-- de sa partie privee.
+	privacyAttribute = "Confidentialite",
+	privateDepartAttribute = "DepartPrive",
 	folder = "Salon",
 	colors = {
 		stone = { 92, 86, 82 },

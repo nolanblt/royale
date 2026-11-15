@@ -28,7 +28,7 @@ local World = require(script.Parent.World)
 local LobbyService = {}
 
 local LB = Config.lobby
-local SIZES = Config.squads.sizes
+local PUBLIC = LB.privacies[1]
 local ORIGIN = Vector3.new(LB.origin[1], LB.origin[2], LB.origin[3])
 
 local state = Lobby.new()
@@ -38,8 +38,11 @@ local away: { [Player]: boolean } = {}
 -- L'invitation recue par chacun : qui, et quand.
 local invites: { [Player]: { from: Player, at: number } } = {}
 local countdown: { mode: string, ends: number }? = nil
+-- Le depart de chaque groupe prive pret (os.clock), par chef.
+local privateEnds: { [string]: number } = {}
 local launching = false
-local onLaunch: ((players: { Player }, mode: string, groups: { { Player } }) -> ())? = nil
+type Launcher = (players: { Player }, mode: string, groups: { { Player } }, privacy: string) -> ()
+local onLaunch: Launcher? = nil
 local folder: Folder? = nil
 local random = Random.new()
 
@@ -1011,6 +1014,12 @@ local function publish()
 			player:SetAttribute(LB.groupAttribute, table.concat(names, ", "))
 			player:SetAttribute(LB.modeAttribute, g.mode)
 			player:SetAttribute(LB.readyAttribute, g.ready)
+			player:SetAttribute(LB.privacyAttribute, g.privacy)
+			local ends = privateEnds[g.leader]
+			player:SetAttribute(
+				LB.privateDepartAttribute,
+				if ends then workspace:GetServerTimeNow() + (ends - os.clock()) else nil
+			)
 		end
 	end
 	workspace:SetAttribute(
@@ -1109,18 +1118,21 @@ local function action(player: Player, name: any)
 	elseif name == "leave" then
 		Lobby.leave(state, id, true)
 	elseif name == "mode" then
-		Lobby.cycleMode(state, id, LB.modes, SIZES)
+		Lobby.cycleMode(state, id, LB.modes)
+	elseif name == "privacy" then
+		Lobby.cyclePrivacy(state, id, LB.privacies)
 	elseif name == "ready" then
 		local g = state.groups[state.groupOf[id] or ""]
-		Lobby.setReady(state, id, not (g and g.ready), SIZES)
+		Lobby.setReady(state, id, not (g and g.ready))
 	end
 	publish()
 end
 
-local function launch(mode: string)
+-- Ces groupes partent ensemble dans une partie de ce mode.
+local function launch(ready: { Lobby.Group }, mode: string, privacy: string)
 	local groups: { { Player } } = {}
 	local players: { Player } = {}
-	for _, g in Lobby.readyGroups(state, mode) do
+	for _, g in ready do
 		local list: { Player } = {}
 		for _, m in g.members do
 			local p = byId[m]
@@ -1138,9 +1150,16 @@ local function launch(mode: string)
 	if #players == 0 or onLaunch == nil then
 		return
 	end
-	print(string.format("[Royale] Départ du salon : %d joueur(s), mode %s", #players, mode))
+	print(
+		string.format(
+			"[Royale] Départ du salon : %d joueur(s), mode %s, partie %s",
+			#players,
+			mode,
+			privacy
+		)
+	)
 	launching = true
-	local ok, err = pcall(onLaunch :: any, players, mode, groups)
+	local ok, err = pcall(onLaunch :: any, players, mode, groups, privacy)
 	launching = false
 	if not ok then
 		warn("[Royale] Le départ a échoué : " .. tostring(err))
@@ -1151,22 +1170,47 @@ local function step()
 	if launching then
 		return
 	end
+	-- Les groupes prives : chacun son court compte a rebours, puis il part
+	-- seul.
+	local changed = false
+	local stillReady: { [string]: Lobby.Group } = {}
+	for _, g in Lobby.readyPrivate(state, PUBLIC) do
+		stillReady[g.leader] = g
+		if privateEnds[g.leader] == nil then
+			privateEnds[g.leader] = os.clock() + LB.privateCountdownSeconds
+			changed = true
+		end
+	end
+	for leader, ends in privateEnds do
+		local g = stillReady[leader]
+		if g == nil then
+			privateEnds[leader] = nil
+			changed = true
+		elseif os.clock() >= ends then
+			privateEnds[leader] = nil
+			launch({ g }, g.mode, g.privacy)
+			return
+		end
+	end
+	if changed then
+		publish()
+	end
 	if countdown == nil then
-		-- Le premier groupe pret lance le compte a rebours de son mode.
+		-- Le premier groupe public pret lance le compte a rebours de son mode.
 		for _, mode in LB.modes do
-			if #Lobby.readyGroups(state, mode) > 0 then
+			if #Lobby.readyGroups(state, mode, PUBLIC) > 0 then
 				countdown = { mode = mode, ends = os.clock() + LB.countdownSeconds }
 				publish()
 				break
 			end
 		end
-	elseif #Lobby.readyGroups(state, countdown.mode) == 0 then
+	elseif #Lobby.readyGroups(state, countdown.mode, PUBLIC) == 0 then
 		countdown = nil
 		publish()
 	elseif os.clock() >= countdown.ends then
 		local mode = countdown.mode
 		countdown = nil
-		launch(mode)
+		launch(Lobby.readyGroups(state, mode, PUBLIC), mode, PUBLIC)
 	end
 end
 
@@ -1181,10 +1225,7 @@ function LobbyService.isAway(player: Player): boolean
 	return away[player] == true
 end
 
-function LobbyService.start(
-	remote: RemoteEvent,
-	launcher: (players: { Player }, mode: string, groups: { { Player } }) -> ()
-)
+function LobbyService.start(remote: RemoteEvent, launcher: Launcher)
 	onLaunch = launcher
 	build()
 	print(string.format("[Royale] Salon : %d cachettes en vitrine", tutorial()))
@@ -1201,7 +1242,7 @@ function LobbyService.start(
 	local function joined(player: Player)
 		local id = idOf(player)
 		byId[id] = player
-		Lobby.add(state, id, Config.squads.mode)
+		Lobby.add(state, id, Config.squads.mode, PUBLIC)
 		publish()
 		LobbyService.place(player)
 	end

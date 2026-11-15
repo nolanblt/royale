@@ -43,6 +43,11 @@ return {
 		["Duo"] = "Duo",
 		["Escouade"] = "Squad",
 		["ESCOUADE"] = "SQUAD",
+		["Publique"] = "Public",
+		["Privée + bots"] = "Private + bots",
+		["Privée sans bots"] = "Private, no bots",
+		["Publique / privée"] = "Public / private",
+		["Partie privée dans %d s"] = "Private match in {1} s",
 
 		-- Le tutoriel du salon
 		["L'ŒIL"] = "THE EYE",

@@ -72,6 +72,11 @@ return function(t: harness.Harness)
 		"THE EYE LEARNS: Rage\nEvery other burst, one more beam."
 	)
 	same(
+		"le mode et la partie privee, en capitales",
+		Lang.upper(Config.lobby.modeNames.solo .. " · " .. Config.lobby.privacyNames.privateBots),
+		"SOLO · PRIVATE + BOTS"
+	)
+	same(
 		"caché, avec le nom de la cachette",
 		"Caché (Buisson) · X sortir · R2 jaillir",
 		"Hidden (Bush) · X get out · R2 burst out"
@@ -116,6 +121,9 @@ return function(t: harness.Harness)
 		need(name)
 	end
 	for _, name in Config.lobby.modeNames do
+		need(name)
+	end
+	for _, name in Config.lobby.privacyNames do
 		need(name)
 	end
 	for _, name in Config.map.zoneNames do

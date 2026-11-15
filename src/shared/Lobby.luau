@@ -10,19 +10,29 @@
 
 local Lobby = {}
 
-export type Group = { leader: string, members: { string }, mode: string, ready: boolean }
+-- `privacy` : publique (on part avec les autres groupes prets du meme mode)
+-- ou privee (le groupe part seul, avec ou sans bots) ; les noms sont ceux de
+-- Config.lobby.privacies.
+export type Group = {
+	leader: string,
+	members: { string },
+	mode: string,
+	ready: boolean,
+	privacy: string,
+}
 export type State = { groups: { [string]: Group }, groupOf: { [string]: string } }
 
 function Lobby.new(): State
 	return { groups = {}, groupOf = {} }
 end
 
--- Un joueur arrive : seul dans son groupe, au mode par defaut.
-function Lobby.add(s: State, id: string, mode: string)
+-- Un joueur arrive : seul dans son groupe, au mode et a la confidentialite
+-- par defaut.
+function Lobby.add(s: State, id: string, mode: string, privacy: string)
 	if s.groupOf[id] then
 		return
 	end
-	s.groups[id] = { leader = id, members = { id }, mode = mode, ready = false }
+	s.groups[id] = { leader = id, members = { id }, mode = mode, ready = false, privacy = privacy }
 	s.groupOf[id] = id
 end
 
@@ -50,7 +60,7 @@ function Lobby.leave(s: State, id: string, stay: boolean)
 		end
 	end
 	if stay then
-		Lobby.add(s, id, g.mode)
+		Lobby.add(s, id, g.mode, g.privacy)
 	end
 end
 
@@ -72,38 +82,63 @@ function Lobby.join(s: State, host: string, id: string, maxGroup: number): boole
 	return true
 end
 
--- Le mode suivant (le chef seulement) : un groupe trop grand pour un mode
--- passe au suivant.
-function Lobby.cycleMode(s: State, id: string, modes: { string }, sizes: { [string]: number })
+-- Le suivant dans une liste, en boucle.
+local function nextOf(list: { string }, current: string): string
+	local i = table.find(list, current) or 0
+	return list[i % #list + 1]
+end
+
+-- Le mode suivant (le chef seulement). Tout groupe peut prendre tout mode
+-- (choisi avec Josh le 16 novembre 2026 : jouer en solo entre amis sans
+-- quitter son groupe) : en partie, un groupe plus grand que l'equipe est
+-- coupe en equipes successives (Squads.assignGroups).
+function Lobby.cycleMode(s: State, id: string, modes: { string })
 	local g = s.groups[id]
 	if g == nil then
 		return
 	end
-	local i = table.find(modes, g.mode) or 0
-	for _ = 1, #modes do
-		i = i % #modes + 1
-		if sizes[modes[i]] >= #g.members then
-			g.mode = modes[i]
-			g.ready = false
-			return
-		end
-	end
+	g.mode = nextOf(modes, g.mode)
+	g.ready = false
 end
 
-function Lobby.setReady(s: State, id: string, ready: boolean, sizes: { [string]: number })
+-- Publique, privee avec bots, privee sans bots (le chef seulement).
+function Lobby.cyclePrivacy(s: State, id: string, privacies: { string })
+	local g = s.groups[id]
+	if g == nil then
+		return
+	end
+	g.privacy = nextOf(privacies, g.privacy)
+	g.ready = false
+end
+
+function Lobby.setReady(s: State, id: string, ready: boolean)
 	local g = s.groups[s.groupOf[id] or ""]
 	if g == nil or g.leader ~= id then
 		return
 	end
-	-- Un groupe plus grand que son mode ne peut pas partir.
-	g.ready = ready and sizes[g.mode] >= #g.members
+	g.ready = ready
 end
 
--- Les groupes prets de ce mode, dans l'ordre de leurs chefs.
-function Lobby.readyGroups(s: State, mode: string): { Group }
+-- Les groupes publics prets de ce mode, dans l'ordre de leurs chefs : ils
+-- partent ensemble au compte a rebours.
+function Lobby.readyGroups(s: State, mode: string, public: string): { Group }
 	local out: { Group } = {}
 	for _, g in s.groups do
-		if g.ready and g.mode == mode then
+		if g.ready and g.mode == mode and g.privacy == public then
+			table.insert(out, g)
+		end
+	end
+	table.sort(out, function(a, b)
+		return a.leader < b.leader
+	end)
+	return out
+end
+
+-- Les groupes prives prets : chacun part seul.
+function Lobby.readyPrivate(s: State, public: string): { Group }
+	local out: { Group } = {}
+	for _, g in s.groups do
+		if g.ready and g.privacy ~= public then
 			table.insert(out, g)
 		end
 	end

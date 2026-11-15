@@ -29,6 +29,16 @@ return function(t: harness.Harness)
 		split.a == split.c and split.d == split.e and split.a ~= split.d
 	)
 	t.check("les bots comblent la premiere place libre", split.x == split.a)
+	local friends = Squads.assignGroups(1, { { "a", "b", "c" } }, { "x" })
+	t.check(
+		"un groupe en solo : chacun pour soi",
+		friends.a ~= friends.b and friends.b ~= friends.c and friends.a ~= friends.c
+	)
+	local pairs = Squads.assignGroups(2, { { "a", "b", "c" } }, { "x" })
+	t.check(
+		"un groupe de 3 en duo : 2 ensemble, le troisieme avec un bot",
+		pairs.a == pairs.b and pairs.c ~= pairs.a and pairs.x == pairs.c
+	)
 	t.equal(
 		"les tailles de la fiche",
 		SQ.sizes.solo * 100 + SQ.sizes.duo * 10 + SQ.sizes.squad,
