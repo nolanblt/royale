@@ -4403,9 +4403,9 @@ Config.notifications = {
 	url = "https://apis.roblox.com/cloud/v2/users/%d/notifications",
 	messages = {
 		-- « Ta récompense du jour t'attend » (aucun parametre).
-		daily = "",
+		daily = "c362d665-d7a7-c840-b314-430b95cbabaa",
 		-- « {userId-friend} joue à ... » : le nom de l'ami, rempli par Roblox.
-		friend = "",
+		friend = "3f48c6de-5768-234d-9b8a-de24c1dfb305",
 	},
 	-- Le rappel du jour part aux absents vus il y a entre ces deux durees
 	-- (heures) : assez tard pour ne pas deranger le lendemain matin, et pas

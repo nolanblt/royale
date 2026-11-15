@@ -68,6 +68,13 @@ le test le dira).
   hidden wins 5,5, it sees everything 5, icône 8. Si « hide or get taken »
   perd le test, la remplacer par « no spot is safe ».
 
+**Vu par Josh dans Creator Hub le 16 novembre 2026** : la personnalisation
+(le test gratuit des vignettes actives) est **désactivée tant que le jeu n'a
+pas plus de 1000 joueurs par jour de façon régulière**. Au lancement, c'est
+donc la **première vignette** de la liste qui se montre : « Who gets taken? »
+en premier. Les 4 restent cochées « actives », pour que le test parte tout
+seul le jour où le seuil est atteint.
+
 ## Comment s'en servir (proposé au départ)
 
 1. Josh choisit la série qu'il préfère : elle va dans le diaporama de la page
