@@ -17,6 +17,8 @@ local StarterGui = game:GetService("StarterGui")
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 
+local ButtonIcons = require(script.Parent.ButtonIcons)
+
 local Hud = {}
 
 local V = Config.view
@@ -234,7 +236,9 @@ function Hud.start()
 				then string.format("La partie commence dans %d s", math.ceil(left))
 				else "En attente de joueurs…"
 		elseif phase == "Visee" then
-			text = "Choisis où l'Œil te crache\nstick gauche pour viser"
+			text = if ButtonIcons.touch()
+				then "Choisis où l'Œil te crache\nglisse le doigt pour viser"
+				else "Choisis où l'Œil te crache\nstick gauche pour viser"
 		elseif phase == "Fin" then
 			local winner = workspace:GetAttribute(M.winnerAttribute)
 			text = if typeof(winner) == "string" and winner ~= ""
@@ -316,14 +320,18 @@ function Hud.start()
 
 		local hidden = player:GetAttribute(Config.hiding.hiddenAttribute)
 		local carried = player:GetAttribute(Config.combat.carryingAttribute)
+		-- Au doigt, les noms des boutons a l'ecran (pas ceux de la manette).
+		local touch = ButtonIcons.touch()
 		hint.Text = if typeof(hidden) == "string"
-			then "Caché (" .. hidden .. ") — X pour sortir, R2 pour sortir en force"
-			elseif typeof(carried) == "string" then "Tu portes "
-				.. carried
-				.. " — Y jeter, B poser"
-			elseif
-				player:GetAttribute(Config.goulag.stateAttribute) == "Duel"
-			then "R2 frapper — 3 coups : K.O. ; un coup à terre : il s'envole"
+			then (if touch
+				then "Caché (" .. hidden .. ") — Sortir, ou Jaillir pour sortir en force"
+				else "Caché (" .. hidden .. ") — X pour sortir, R2 pour sortir en force")
+			elseif typeof(carried) == "string" then "Tu portes " .. carried .. (if touch
+				then " — Jeter ou Poser"
+				else " — Y jeter, B poser")
+			elseif player:GetAttribute(Config.goulag.stateAttribute) == "Duel" then (if touch
+				then "Frapper : 3 coups, K.O. ; un coup à terre : il s'envole"
+				else "R2 frapper — 3 coups : K.O. ; un coup à terre : il s'envole")
 			else ""
 		-- L'issue d'un duel du Ventre, pour tout le monde, quelques secondes.
 		local issue = workspace:GetAttribute(Config.goulag.resultAttribute)

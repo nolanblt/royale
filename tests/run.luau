@@ -28,6 +28,8 @@ local suites = {
 	{ name = "La progression", run = require("./specs/progression") },
 	{ name = "La boutique", run = require("./specs/shop") },
 	{ name = "Les defis", run = require("./specs/challenges") },
+	{ name = "Les recompenses quotidiennes", run = require("./specs/daily") },
+	{ name = "Les boutons au doigt", run = require("./specs/touch") },
 	{ name = "Regles branchees", run = require("./specs/wiring") },
 }
 

@@ -21,7 +21,7 @@ local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 local Squads = require(Royale:WaitForChild("Squads"))
 
-local CosmeticFx = require(script.Parent.CosmeticFx)
+local CosmeticFx = require(Royale:WaitForChild("Effets"):WaitForChild("CosmeticFx"))
 local CombatService = require(script.Parent.CombatService)
 local EyeService = require(script.Parent.EyeService)
 local ChallengeService = require(script.Parent.ChallengeService)

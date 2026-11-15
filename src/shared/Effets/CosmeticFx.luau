@@ -8,6 +8,9 @@
 	14 novembre 2026 : « faut que ca donne envie ».
 
 	Rien ici ne change le jeu : ce sont des effets, sans collision ni rayon.
+	Partage (ReplicatedStorage.Royale.Effets) : le serveur les pose pour
+	tous, le client les construit seul pour la vitrine de la boutique. Ce
+	n'est pas de la logique pure : d'ou ce sous-dossier, a part.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")

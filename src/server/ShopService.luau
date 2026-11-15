@@ -27,7 +27,7 @@ local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 local Shop = require(Royale:WaitForChild("Shop"))
 
-local CosmeticFx = require(script.Parent.CosmeticFx)
+local CosmeticFx = require(Royale:WaitForChild("Effets"):WaitForChild("CosmeticFx"))
 local ProfileService = require(script.Parent.ProfileService)
 local RemoteGuard = require(script.Parent.RemoteGuard)
 
@@ -51,7 +51,7 @@ local function notify(player: Player, text: string)
 end
 
 local function today(): number
-	return os.time() // 86400
+	return os.time() // SH.dayLength
 end
 
 -- Ce que l'ecran montre : la boutique du jour, le prix d'un tirage (sur
@@ -360,6 +360,11 @@ end
 function ShopService.equipped(player: Player, slot: string): any?
 	local id = player:GetAttribute(CO.attributePrefix .. slot)
 	return if typeof(id) == "string" then items[id] else nil
+end
+
+-- Republie la boutique d'un joueur (un autre service a change son profil).
+function ShopService.refresh(player: Player)
+	publish(player)
 end
 
 function ShopService.start(remote: RemoteEvent)

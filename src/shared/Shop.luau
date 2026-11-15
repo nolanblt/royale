@@ -15,12 +15,13 @@ function Shop.price(items: { [string]: any }, prices: { [string]: number }, id: 
 	return if def then prices[def.rarity] else math.huge
 end
 
--- Les objets du tirage : tout le catalogue sauf les objets du passe
--- (introuvables ailleurs), tries pour un ordre stable.
+-- Les objets du tirage : tout le catalogue sauf les objets du passe et des
+-- recompenses quotidiennes (introuvables ailleurs), tries pour un ordre
+-- stable.
 function Shop.drawPool(items: { [string]: any }): { string }
 	local pool: { string } = {}
 	for id, def in items do
-		if not def.pass then
+		if not def.pass and not def.daily then
 			table.insert(pool, id)
 		end
 	end

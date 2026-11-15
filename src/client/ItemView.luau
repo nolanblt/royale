@@ -12,14 +12,17 @@
 	Rien ne se decide ici : le serveur publie, l'ecran montre.
 ]]
 
-local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Bag = require(Royale:WaitForChild("Bag"))
 local Config = require(Royale:WaitForChild("Config"))
+
+local ButtonIcons = require(script.Parent.ButtonIcons)
+local InputBus = require(script.Parent.InputBus)
 local Throw = require(Royale:WaitForChild("Throw"))
 
 local ItemView = {}
@@ -137,13 +140,26 @@ function ItemView.start()
 	-- debordait sur une petite fenetre). L'echelle se deduit de la largeur.
 	local fit = Instance.new("UIScale")
 	fit.Parent = bar
+	-- Au doigt, il se decale a gauche et retrecit : au milieu, il passait
+	-- sous le bouton Frapper (Config.touch).
+	local center, share = 0.5, V.slotFitFraction
+	-- Les textes du sac (l'objet choisi, son etat) suivent la barre.
+	local followers: { GuiObject } = {}
 	local function refit()
+		local touch = ButtonIcons.touch()
+		center = if touch then Config.touch.bagCenter else 0.5
+		share = if touch then Config.touch.bagWidth else V.slotFitFraction
+		bar.Position = UDim2.new(center, 0, 1, -V.slotBottom)
+		for _, l in followers do
+			l.Position = UDim2.new(center, 0, l.Position.Y.Scale, l.Position.Y.Offset)
+		end
 		local width = gui.AbsoluteSize.X
 		if width > 0 then
-			fit.Scale = math.min(1, width * V.slotFitFraction / bar.Size.X.Offset)
+			fit.Scale = math.min(1, width * share / bar.Size.X.Offset)
 		end
 	end
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(refit)
+	UserInputService.LastInputTypeChanged:Connect(refit)
 	refit()
 	local slots: { { frame: Frame, name: TextLabel, stroke: UIStroke } } = {}
 	for i = 1, BG.slots do
@@ -170,6 +186,9 @@ function ItemView.start()
 	local status =
 		textLabel(gui, UDim2.new(V.slotFitFraction, 0, 0, 24), UDim2.new(0.5, 0, 1, -190), 20)
 	status.TextColor3 = Color3.fromRGB(255, 220, 140)
+	table.insert(followers, selectedName)
+	table.insert(followers, status)
+	refit()
 	local message =
 		textLabel(gui, UDim2.new(V.slotFitFraction, 0, 0, 30), UDim2.fromScale(0.5, 0.68), 24)
 	local announce =
@@ -222,7 +241,7 @@ function ItemView.start()
 		end
 	end
 
-	ContextActionService:BindAction(
+	InputBus.bind(
 		"RoyaleObjetChoix",
 		function(_, state, input: InputObject)
 			if state ~= Enum.UserInputState.Begin or not playing() then
@@ -244,7 +263,7 @@ function ItemView.start()
 		}))
 	)
 
-	ContextActionService:BindAction("RoyaleObjetUtiliser", function(_, state)
+	InputBus.bind("RoyaleObjetUtiliser", function(_, state)
 		if not playing() then
 			aiming = false
 			hideDots()

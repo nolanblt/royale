@@ -792,3 +792,60 @@ vraie vitesse, à toi de juger.
 2. **Les effets signature** : l'anneau doré, l'œil de la comète, la
    paupière et le battement des cocons, les traces au sol, le trou noir.
 3. **Les traces au sol** ne doivent jamais apparaître quand tu es caché.
+
+## La boutique au salon, la vitrine, les récompenses quotidiennes (14 novembre 2026)
+
+Vu dans Studio : l'échoppe, le bouton « Boutique », la vitrine (batte,
+aspiration), l'écran du jour, les 4 nouvelles signatures ; les 151
+apparences se construisent sans erreur.
+
+1. **X devant le comptoir** ouvre bien la boutique (invite de Roblox) ?
+2. **La vitrine** : on comprend l'objet en le voyant ? La caméra revient
+   bien quand on ferme ?
+3. **L'écran du jour** à ta première connexion de chaque jour ; reviens le
+   lendemain : la case suivante. Rate un jour : tu recules d'une case.
+
+## La boutique en cartes, le quotidien illustré, l'autel (nuit du 15 au 16 novembre 2026)
+
+Vu : l'autel, l'onglet Boutique en cartes. **Pas revu** (Studio bloqué) :
+les autres onglets (Tirage, Passe, Défis, Mes cosmétiques, Crédits), le
+changement d'onglet après correction, l'écran du jour en cartes, la
+vitrine avec une batte (le personnage ne semblait pas la tenir).
+
+## La boutique embellie, les obélisques, le jeu au téléphone (15 novembre 2026)
+
+Vu dans Studio : la boutique (onglets Boutique et Tirage), toucher une
+carte pour la choisir, la croix qui ferme, l'écran du jour (en petit et en
+grand), les obélisques, les pastilles du salon touchables (Boutique, Prêt),
+la visée « glisse le doigt », les boutons de combat en partie. **Pas revu à
+l'écran** (Studio bloqué) : la dernière disposition (petits boutons en
+rangée en haut à droite, sac décalé à gauche). **Jamais essayé sur un vrai
+téléphone** : Studio ne simule ni le doigt ni le bouton de saut de Roblox.
+
+Sur ton téléphone (le jeu publié) :
+
+1. **Au salon** : touche Prêt, Mode, Boutique ; les pastilles en haut ne
+   gênent rien ?
+2. **La boutique** : choisir, acheter, changer d'onglet, défiler du doigt,
+   fermer. Le texte est lisible ?
+3. **En partie** : marcher, regarder, sauter, Frapper, Courir, Accroupi
+   (et maintenu : ramper ; en courant : glisser), Objet (maintenu : viser,
+   lâcher : lancer), Pousser. Les boutons tombent sous le pouce ? Rien ne
+   se chevauche ?
+4. **Caché** : Sortir et Jaillir. **En portant** : Jeter et Poser.
+5. **La visée du départ** : glisser le doigt déplace bien la cible ?
+6. **Éliminé** : changer de joueur, parier, quitter.
+7. **Sur ordinateur et à la manette** : rien n'a changé (aucun bouton
+   tactile ne doit apparaître).
+
+## La boutique du jour sur une ligne, le salon qui tremblait (15 novembre 2026)
+
+1. **La boutique** : 5 objets du jour sur une seule ligne, et « Toujours
+   là » visible dessous sans défiler (sur un grand écran) ?
+2. **Le salon** : la barre du haut et les boutons du bas ne tremblent plus,
+   même dans une petite fenêtre Studio ? Quand tu changes de mode ou passes
+   Prêt, ils se recalent d'un coup (un clignement d'une image au plus).
+
+Vérifié seul dans Studio (en mode édition) : la cause du tremblement,
+l'échelle recalculée à chaque image qui ne se posait jamais. La correction,
+elle, n'a **pas été vue à l'écran** (Studio n'a pas voulu lancer la partie).

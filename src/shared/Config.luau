@@ -133,6 +133,9 @@ Config.controls = {
 			down = { gamepad = "DPadDown", keyboard = "Down" },
 			previousTab = { gamepad = "ButtonL1", keyboard = "Q" },
 			nextTab = { gamepad = "ButtonR1", keyboard = "R" },
+			-- Les cartes sont en grille : la croix va aussi a gauche et a droite.
+			left = { gamepad = "DPadLeft", keyboard = "Left" },
+			right = { gamepad = "DPadRight", keyboard = "Right" },
 			confirm = { gamepad = "ButtonA", keyboard = "Return" },
 			close = { gamepad = "ButtonB", keyboard = "Backspace" },
 		},
@@ -166,6 +169,55 @@ Config.controls = {
 			playerList = { gamepad = "ButtonR3", keyboard = "Tab" },
 		},
 	},
+}
+
+-- Les boutons au doigt (TouchControls ; choisi avec Josh le 15 novembre
+-- 2026 : le jeu doit se jouer, facilement, au telephone). Le stick et le
+-- saut restent ceux de Roblox ; nos boutons se rangent autour du bouton de
+-- saut, mesure a l'ecran : angle en degres (0 a droite, 90 en haut),
+-- distance et diametre en tailles du bouton de saut. Les rayons sont
+-- choisis pour qu'aucun bouton n'en touche un autre (un test le verifie).
+Config.touch = {
+	layout = {
+		hit = { angle = 180, ring = 1.3, size = 1 },
+		useItem = { angle = 128, ring = 1.3, size = 0.8 },
+		shove = { angle = 82, ring = 1.25, size = 0.7 },
+		posture = { angle = 163, ring = 2.35, size = 0.7 },
+		sprint = { angle = 140, ring = 2.35, size = 0.65 },
+		previousItem = { angle = 118, ring = 2.4, size = 0.55 },
+		nextItem = { angle = 99, ring = 2.35, size = 0.55 },
+	},
+	-- Sans bouton de saut trouve (pas encore cree) : sa taille et la place de
+	-- son centre depuis le coin bas droit (pixels), celles de Roblox sur un
+	-- telephone.
+	fallbackJump = 70,
+	fallbackCenter = { 60, 55 },
+	-- La rangee des petits boutons (carte, signaux, emote), en haut a
+	-- droite sous la barre de Roblox : diametre, ecart, marge (pixels).
+	small = 46,
+	smallGap = 8,
+	margin = 12,
+	-- La rangee du spectateur, en bas au milieu : hauteur, ecart, marge.
+	pillHeight = 46,
+	pillGap = 10,
+	pillBottom = 70,
+	-- Le texte d'un bouton : cette part de son diametre (pixels au plus).
+	textShare = 0.2,
+	textMax = 18,
+	-- Enfonce, un bouton rapetisse a cette taille.
+	pressedScale = 0.9,
+	-- La visee du depart au doigt : un pixel glisse deplace le reticule de
+	-- tant de studs (la carte fait 1 600 studs, un telephone ~800 pixels :
+	-- deux glissements la traversent).
+	aimStudsPerPixel = 1,
+	displayOrder = 3,
+	-- Le sac, au doigt : en bas, decale a gauche (au milieu, il passait sous
+	-- Frapper) ; son centre et sa largeur au plus, en part de l'ecran.
+	bagCenter = 0.4,
+	bagWidth = 0.46,
+	-- Au salon, le texte du centre (depart, invitation), en part de la
+	-- hauteur : sous les pastilles, qui montent en haut au doigt.
+	lobbyTextY = 0.4,
 }
 
 --------------------------------------------------------------------------------
@@ -1571,6 +1623,81 @@ Config.lobby = {
 	-- Les lampadaires du muret, decales d'un demi-cran : 8 les tient loin
 	-- des deux panneaux (pas 6 ni 10, qui en planteraient un devant).
 	lanterns = 8,
+	-- L'echoppe de la boutique (choisi avec Josh le 14 novembre 2026 : « un
+	-- endroit boutique sur le salon ») : un comptoir sous un auvent, son
+	-- enseigne, et le socle de la vitrine ou l'objet choisi s'affiche. Sur
+	-- l'arc libre entre les deux arbres morts (degres), en studs.
+	shopStall = {
+		angle = 180,
+		radius = 50,
+		-- Aucune colonne a moins de cet angle (degres) de l'echoppe.
+		clearance = 15,
+		counter = { 9, 3.4, 2.4 },
+		awningHeight = 9,
+		awningColor = { 120, 28, 24 },
+		pedestal = { 4.5, 1.2 },
+		pedestalAhead = 6,
+		-- L'objet montre flotte a cette hauteur au-dessus du socle.
+		previewHeight = 3.5,
+		-- La camera de la vitrine : a cette distance du socle, a cette hauteur.
+		cameraDistance = 14,
+		cameraHeight = 5,
+		promptDistance = 10,
+	},
+	-- La vitrine (ShopShowcase) : l'objet tombe a droite de l'ecran (decalage
+	-- de la cible, en part de la distance) ; la comete et la trainee tournent
+	-- (rayon en studs, vitesse en radians/s) ; l'aspiration monte (studs, en
+	-- tant de secondes) ; le personnage se tient debout sur le socle ; le
+	-- titre s'affiche a cette taille (studs).
+	showcase = {
+		shift = 0.32,
+		cometRadius = 4,
+		cometSpin = 2.2,
+		trailRadius = 3,
+		trailSpin = 2.5,
+		captureSeconds = 2.2,
+		captureRise = 9,
+		standHeight = 3,
+		titleWidth = 10,
+		titleHeight = 2.5,
+	},
+	-- L'autel de l'Oeil, au centre (LobbyService) : l'estrade (diametres
+	-- des deux marches, hauteur d'une marche), l'oeil grave et son iris, les
+	-- fissures, le pilier et la vasque (diametre, hauteur), le feu, les
+	-- braises qui montent (par s), la lumiere, les obelisques.
+	-- En studs.
+	altar = {
+		steps = { 26, 18 },
+		stepHeight = 0.6,
+		eye = 12,
+		iris = 6,
+		cracks = 9,
+		ember = { 255, 80, 35 },
+		pillar = { 2.2, 2.6 },
+		bowl = { 5.5, 1.4 },
+		fire = 9,
+		heat = 14,
+		sparks = 14,
+		lightRange = 34,
+		lightBrightness = 2.4,
+		-- Les quatre obelisques : place (part du rayon de l'estrade), socle
+		-- (cote, hauteur), fut (largeur, epaisseur a la base ; part gardee en
+		-- haut ; blocs ; hauteur ; penche au plus, radians), l'oeil de braise
+		-- au sommet (diametre, flamme, lumiere).
+		obelisk = {
+			ring = 0.84,
+			base = { 2.6, 0.7 },
+			shaft = { 1.5, 1.1 },
+			taper = 0.62,
+			segments = 3,
+			height = 6,
+			lean = 0.025,
+			orb = 0.8,
+			flame = 2.5,
+			lightRange = 12,
+			lightBrightness = 1.6,
+		},
+	},
 	-- Les colonnes antiques : entieres (avec chapiteau) ou brisees, et du
 	-- lierre sur certaines (LobbyService).
 	columnStyle = {
@@ -3590,6 +3717,83 @@ Config.cosmetics = {
 			b = { 255, 70, 30 },
 			signature = "riftBat",
 		},
+		-- LES RECOMPENSES QUOTIDIENNES (Config.daily) : un objet epique le
+		-- jour 2 et un legendaire le jour 7 de chaque semaine, introuvables
+		-- ailleurs (choisi avec Josh le 14 novembre 2026).
+		dailyW1Trail = {
+			name = "Braise vive",
+			slot = "trail",
+			rarity = "epic",
+			style = "ember",
+			a = { 255, 170, 60 },
+			b = { 200, 50, 10 },
+			daily = 1,
+		},
+		dailyW1Comet = {
+			name = "Pluie d'étoiles",
+			slot = "comet",
+			rarity = "legendary",
+			style = "star",
+			a = { 220, 230, 255 },
+			b = { 130, 150, 255 },
+			signature = "starShower",
+			daily = 1,
+		},
+		dailyW2Cocoon = {
+			name = "Cocon de givre",
+			slot = "cocoon",
+			rarity = "epic",
+			style = "ice",
+			a = { 190, 235, 255 },
+			b = { 140, 210, 255 },
+			daily = 1,
+		},
+		dailyW2Bat = {
+			name = "Tempête",
+			slot = "bat",
+			rarity = "legendary",
+			style = "neon",
+			a = { 20, 20, 40 },
+			b = { 120, 160, 255 },
+			signature = "stormBat",
+			daily = 1,
+		},
+		dailyW3Capture = {
+			name = "Spirale d'âmes",
+			slot = "capture",
+			rarity = "epic",
+			style = "spiral",
+			a = { 200, 140, 255 },
+			b = { 80, 30, 200 },
+			daily = 1,
+		},
+		dailyW3Trail = {
+			name = "Givre éternel",
+			slot = "trail",
+			rarity = "legendary",
+			style = "frost",
+			a = { 210, 245, 255 },
+			b = { 120, 190, 255 },
+			signature = "frostSteps",
+			daily = 1,
+		},
+		dailyW4Emote = {
+			name = "Pas de danse",
+			slot = "emote",
+			rarity = "epic",
+			anim = 3361276673,
+			daily = 1,
+		},
+		dailyW4Capture = {
+			name = "Phénix",
+			slot = "capture",
+			rarity = "legendary",
+			style = "flame",
+			a = { 255, 180, 60 },
+			b = { 255, 60, 20 },
+			signature = "phoenix",
+			daily = 1,
+		},
 		-- LE PASSE, saison 1 « Le premier Regard » : rouge, braise, chair.
 		-- La voie gratuite (un objet tous les 3 a 5 paliers, choisi avec Josh).
 		passTitleWatched = {
@@ -3969,6 +4173,21 @@ Config.cosmetics = {
 			white = { 255, 240, 225 },
 			glance = { 0.6, 1.8 },
 		},
+		-- Une nuee d'etoiles tourne autour du coeur, sur deux plans.
+		starShower = { motes = 8, moteSize = 0.55, orbit = 4, spin = 5 },
+		-- Des eclairs zebrent le fut et crepitent.
+		stormBat = { arcs = 5, width = 0.07, flicker = 0.5 },
+		-- Des cristaux de glace jaillissent du sol sous les pas, puis fondent.
+		frostSteps = {
+			every = 0.3,
+			spikes = 3,
+			height = { 1.2, 2.4 },
+			grow = 0.15,
+			fade = 1.6,
+			reach = 6,
+		},
+		-- Deux ailes de feu se deploient et battent au-dessus de l'aspire.
+		phoenix = { feathers = 6, length = 5, width = 0.5, above = 2, flap = 5, spread = 35 },
 		-- Un grand oeil s'ouvre au-dessus et regarde monter.
 		innerEye = {
 			above = 11,
@@ -3996,6 +4215,94 @@ Config.cosmetics = {
 	-- Une emote se joue au plus ce temps (s) (certaines bouclent), et
 	-- s'arrete si l'on bouge.
 	emoteMaxSeconds = 8,
+}
+
+-- LES RECOMPENSES QUOTIDIENNES (choisi avec Josh le 14 novembre 2026) :
+-- un cycle de 4 semaines de 7 jours. Chaque jour de connexion fait avancer
+-- d'une case, chaque jour rate fait reculer d'une case (Daily). Le jour 2
+-- (le lendemain, quand on decroche le plus) et le jour 7 (une semaine
+-- tenue) donnent un objet propre aux recompenses ; les autres jours, des
+-- credits et des fragments, de plus en plus au fil du cycle. Un objet deja
+-- obtenu (au cycle suivant) rend ces credits a la place.
+Config.daily = {
+	days = 7,
+	-- Le profil garde le dernier jour (UTC) recupere et la case.
+	attribute = "Quotidien",
+	ownedCredits = { epic = 300, legendary = 600 },
+	-- Une ligne par semaine, une case par jour.
+	weeks = {
+		{
+			{ credits = 50 },
+			{ item = "dailyW1Trail" },
+			{ credits = 75 },
+			{ fragments = 5 },
+			{ credits = 100 },
+			{ fragments = 8 },
+			{ item = "dailyW1Comet" },
+		},
+		{
+			{ credits = 60 },
+			{ item = "dailyW2Cocoon" },
+			{ credits = 85 },
+			{ fragments = 6 },
+			{ credits = 110 },
+			{ fragments = 9 },
+			{ item = "dailyW2Bat" },
+		},
+		{
+			{ credits = 70 },
+			{ item = "dailyW3Capture" },
+			{ credits = 95 },
+			{ fragments = 7 },
+			{ credits = 120 },
+			{ fragments = 10 },
+			{ item = "dailyW3Trail" },
+		},
+		{
+			{ credits = 80 },
+			{ item = "dailyW4Emote" },
+			{ credits = 105 },
+			{ fragments = 8 },
+			{ credits = 130 },
+			{ fragments = 12 },
+			{ item = "dailyW4Capture" },
+		},
+	},
+	-- L'ecran du jour (DailyView, pixels du dessin ; la taille du panneau se
+	-- deduit de ce qu'il contient). Les cases de la semaine (le jour 7 plus
+	-- large), la grande image du jour et ses rayons (nombre, largeur,
+	-- longueur en part de l'image, transparence au milieu, degres par s).
+	cardWidth = 100,
+	cardHeight = 150,
+	cardImage = 72,
+	cardGap = 10,
+	lastWide = 1.3,
+	checkSize = 34,
+	-- Un jour deja pris s'assombrit (transparence du voile).
+	pastShade = 0.5,
+	dayTextSize = 13,
+	heroSize = 170,
+	rays = 10,
+	rayWidth = 14,
+	rayLength = 1.9,
+	rayStrength = 0.72,
+	raySpin = 12,
+	pad = 22,
+	gap = 8,
+	sideRoom = 20,
+	textSize = 17,
+	gotSize = 24,
+	titleSize = 32,
+	buttonWidth = 200,
+	buttonHeight = 46,
+	-- Part de l'ecran (sous la barre de Roblox) et echelle maximale.
+	screenShare = 0.94,
+	maxScale = 1.2,
+	-- L'entree (s) et l'assombrissement du salon derriere.
+	enterSeconds = 0.35,
+	veil = 0.45,
+	-- Il se ferme seul apres ce temps (s), ou a la touche.
+	showSeconds = 12,
 }
 
 -- Les defis (CONCEPT.md : quotidiens et hebdomadaires, ils font avancer le
@@ -4044,8 +4351,10 @@ Config.leaderboard = {
 Config.shop = {
 	-- La boutique tournante : ce nombre d'objets du tirage, changes chaque
 	-- jour (UTC), a prix fixe (choisi avec Josh : on peut toujours viser un
-	-- objet sans hasard) ; le coin permanent garde les classiques.
-	daily = 6,
+	-- objet sans hasard) ; le coin permanent garde les classiques. Cinq :
+	-- une seule ligne de cartes (ui.cardWidth), sans defiler (Josh, le 15
+	-- novembre 2026 ; six en debordait une sur une deuxieme ligne).
+	daily = 5,
 	permanent = { "cometEmber", "trailAsh", "emoteCheer", "titleSurvivor" },
 	-- Le tirage (choisi avec Josh le 14 novembre 2026 : un seul grand
 	-- tirage) : tous les objets du catalogue hors passe. Chaque rarete a sa
@@ -4076,8 +4385,94 @@ Config.shop = {
 	-- L'ecran (pixels) et ses couleurs ; par-dessus tout ; les recompenses
 	-- du passe montrees d'avance.
 	displayOrder = 6,
-	passPreview = 6,
+	passPreview = 8,
+	-- Le panneau en cartes (choisi avec Josh le 15 novembre 2026 : « une
+	-- vraie boutique avec les photos d'item », puis « rends ca encore plus
+	-- beau ») : a gauche, la vitrine 3D a droite. Tailles en pixels du
+	-- dessin ; une echelle le fait tenir dans l'ecran.
+	ui = {
+		-- Part de l'ecran (largeur, hauteur), bord gauche, echelle maximale.
+		width = 0.6,
+		height = 0.86,
+		left = 0.02,
+		designWidth = 880,
+		-- Assez haut pour l'onglet Boutique sans defiler : deux lignes de
+		-- cartes (jour, toujours) et leurs titres font 542 pixels, et le
+		-- contenu a la hauteur moins 236 (titre, onglets, detail, pied).
+		designHeight = 790,
+		maxScale = 1.3,
+		-- Au telephone, l'echelle tomberait sous celle-ci (texte illisible) :
+		-- le panneau prend alors presque toute la largeur et raccourcit en
+		-- hauteur au lieu de rapetisser (on defile).
+		minScale = 0.8,
+		smallWidth = 0.98,
+		smallHeight = 0.96,
+		pad = 20,
+		innerFrame = 6,
+		panelTransparency = 0.04,
+		panelTop = { 46, 30, 24 },
+		panelBottom = { 14, 10, 10 },
+		closeSize = 36,
+		tabHeight = 34,
+		tabTextSize = 16,
+		-- Cinq cartes par ligne : 5 x 156 + 4 x 10 = 820, dans les 834 du
+		-- contenu (880 moins les marges et la barre de defilement).
+		cardWidth = 156,
+		cardHeight = 222,
+		cardInset = 4,
+		cardImage = 124,
+		cardFoot = 32,
+		-- Le haut de la carte prend cette part de la couleur de sa rarete.
+		cardTint = 0.28,
+		cardBottom = { 20, 15, 14 },
+		tagSize = 12,
+		gap = 10,
+		-- Le halo derriere l'image : anneaux, taille (part de l'image), force.
+		-- Beaucoup d'anneaux tres legers : cinq faisaient une cible (vu en
+		-- image).
+		glowRings = 14,
+		glowSize = 1.1,
+		glowStrength = 0.6,
+		chipWidth = 200,
+		chipHeight = 30,
+		rowHeight = 64,
+		detailHeight = 64,
+		detailTitleSize = 22,
+		footHeight = 34,
+		buyMinWidth = 150,
+		buyIcon = 26,
+		titleSize = 34,
+		textSize = 18,
+		smallSize = 15,
+		corner = 12,
+		-- La carte choisie grossit en ce temps (s) ; le bouton rebondit depuis
+		-- cette taille a l'achat.
+		selectSeconds = 0.12,
+		popFrom = 0.85,
+		card = { 38, 29, 25 },
+		cardSelected = { 70, 44, 24 },
+		owned = { 140, 220, 120 },
+		dimText = { 175, 162, 150 },
+		buyText = { 30, 18, 12 },
+		coin = { 255, 196, 80 },
+		coinEdge = { 190, 120, 30 },
+		fragment = { 160, 120, 255 },
+		fragmentEdge = { 230, 210, 255 },
+	},
+	-- La boutique du jour change a minuit (UTC) : la longueur d'un jour (s).
+	dayLength = 86400,
+	-- L'image d'un objet (ItemThumb) : l'angle de la camera, la marge, les
+	-- lumieres, et la vitesse a laquelle l'objet choisi tourne (radians/s).
+	thumb = {
+		fov = 30,
+		margin = 1.25,
+		ambient = { 120, 110, 105 },
+		light = { 255, 240, 220 },
+		spin = 0.8,
+	},
 	panelWidth = 560,
+	-- L'invite du comptoir de l'echoppe du salon (LobbyService la pose).
+	stallPrompt = "RoyaleBoutiqueEchoppe",
 	rowHeight = 30,
 	textSize = 20,
 	background = { 20, 16, 16 },

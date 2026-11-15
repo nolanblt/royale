@@ -6,7 +6,6 @@
 	soi et ses coequipiers), droite une emote.
 ]]
 
-local ContextActionService = game:GetService("ContextActionService")
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,6 +13,8 @@ local RunService = game:GetService("RunService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
+
+local InputBus = require(script.Parent.InputBus)
 
 local GestureView = {}
 
@@ -269,19 +270,19 @@ function GestureView.start()
 		end
 	end
 
-	ContextActionService:BindAction("RoyaleSignalDanger", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleSignalDanger", function(_, state: Enum.UserInputState)
 		if state == Enum.UserInputState.Begin then
 			signal("danger")
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, table.unpack(merged({ onFoot.signalDanger, hiddenCtx.signalDanger })))
-	ContextActionService:BindAction("RoyaleSignalIci", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleSignalIci", function(_, state: Enum.UserInputState)
 		if state == Enum.UserInputState.Begin then
 			signal("here")
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, table.unpack(merged({ onFoot.signalHere, hiddenCtx.signalHere })))
-	ContextActionService:BindAction("RoyaleCarte", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleCarte", function(_, state: Enum.UserInputState)
 		if state == Enum.UserInputState.Begin then
 			frame.Visible = not frame.Visible
 			if frame.Visible then
@@ -290,7 +291,7 @@ function GestureView.start()
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, table.unpack(keys(onFoot.map)))
-	ContextActionService:BindAction("RoyaleEmote", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleEmote", function(_, state: Enum.UserInputState)
 		if state == Enum.UserInputState.Begin then
 			local character = player.Character
 			local humanoid = character and character:FindFirstChildOfClass("Humanoid")

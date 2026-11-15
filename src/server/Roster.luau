@@ -19,7 +19,7 @@ local TweenService = game:GetService("TweenService")
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 
-local CosmeticFx = require(script.Parent.CosmeticFx)
+local CosmeticFx = require(Royale:WaitForChild("Effets"):WaitForChild("CosmeticFx"))
 local Sfx = require(script.Parent.Sfx)
 
 local Roster = {}

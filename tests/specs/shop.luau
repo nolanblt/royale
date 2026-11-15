@@ -115,6 +115,14 @@ return function(t: harness.Harness)
 		table.concat(d1, ",") == table.concat(d1b, ",")
 	)
 	t.check("le lendemain, elle change", table.concat(d1, ",") ~= table.concat(d2, ","))
+	-- Une seule ligne de cartes, sans defiler (Josh) : le contenu du panneau
+	-- fait la largeur du dessin moins les marges et 6 pixels (barre de
+	-- defilement et retraits de ShopView) ; il ne change pas au telephone.
+	local U = SH.ui
+	t.check(
+		"la boutique du jour tient sur une ligne",
+		SH.daily * U.cardWidth + (SH.daily - 1) * U.gap <= U.designWidth - 2 * U.pad - 6
+	)
 	local clash, passSold = false, false
 	for day = 20000, 20060 do
 		for _, id in Shop.daily(items, SH.permanent, day, SH.daily) do

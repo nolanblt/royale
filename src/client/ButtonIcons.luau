@@ -31,7 +31,38 @@ function ButtonIcons.gamepad(): boolean
 	return UserInputService.GamepadEnabled
 end
 
--- Une pastille : l'icone (ou la touche) puis son texte, de hauteur `icon`.
+-- Au doigt seulement (telephone, tablette, rien d'autre de touche en
+-- dernier) : pas d'icone de bouton, qui ne voudrait rien dire ; les boutons
+-- tactiles et les textes le lisent.
+-- Pour les essais sur ordinateur : se comporter comme au doigt.
+local forcedTouch = false
+function ButtonIcons.forceTouch(on: boolean)
+	forcedTouch = on
+end
+
+function ButtonIcons.touch(): boolean
+	if forcedTouch then
+		return true
+	end
+	if not UserInputService.TouchEnabled then
+		return false
+	end
+	local last = UserInputService:GetLastInputType()
+	if last == Enum.UserInputType.Touch then
+		return true
+	end
+	if
+		last == Enum.UserInputType.Keyboard
+		or string.find(last.Name, "Gamepad")
+		or string.find(last.Name, "Mouse")
+	then
+		return false
+	end
+	return not UserInputService.GamepadEnabled and not UserInputService.KeyboardEnabled
+end
+
+-- Une pastille : l'icone (ou la touche) puis son texte, de hauteur `icon` ;
+-- au doigt, le texte seul.
 function ButtonIcons.chip(
 	parent: Instance,
 	binding: Binding,
@@ -52,7 +83,9 @@ function ButtonIcons.chip(
 	row.Padding = UDim.new(0, math.floor(icon / 4))
 	row.SortOrder = Enum.SortOrder.LayoutOrder
 	row.Parent = chip
-	if ButtonIcons.gamepad() then
+	-- Au doigt, rien : la pastille entiere se touche.
+	local touch = ButtonIcons.touch()
+	if not touch and ButtonIcons.gamepad() then
 		local image = Instance.new("ImageLabel")
 		image.Name = "Icone"
 		image.LayoutOrder = 1
@@ -60,7 +93,7 @@ function ButtonIcons.chip(
 		image.Size = UDim2.fromOffset(icon, icon)
 		image.Image = UserInputService:GetImageForKeyCode((Enum.KeyCode :: any)[binding.gamepad])
 		image.Parent = chip
-	else
+	elseif not touch then
 		local key = Instance.new("TextLabel")
 		key.Name = "Touche"
 		key.LayoutOrder = 1

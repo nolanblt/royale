@@ -55,6 +55,14 @@ function AimView.start()
 
 	local aim = Vector2.zero
 	local active = false
+	-- Au doigt : on glisse le reticule (la camera regarde la carte d'en
+	-- haut, le haut de l'ecran vers -Z : glisser a droite va vers +X, vers
+	-- le bas vers +Z).
+	UserInputService.TouchMoved:Connect(function(touch: InputObject, processed: boolean)
+		if active and not processed then
+			aim += Vector2.new(touch.Delta.X, touch.Delta.Y) * Config.touch.aimStudsPerPixel
+		end
+	end)
 	-- Ce qu'on ecarte le temps de viser, et ce qu'on remet apres.
 	local saved: { density: number?, clouds: boolean? } = {}
 	local function clearView(on: boolean)

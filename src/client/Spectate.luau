@@ -6,7 +6,6 @@
 	parier sur celui qu'on regarde, B pour quitter.
 ]]
 
-local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -14,16 +13,24 @@ local RunService = game:GetService("RunService")
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 
+local ButtonIcons = require(script.Parent.ButtonIcons)
+local InputBus = require(script.Parent.InputBus)
+
 local Spectate = {}
 
 local V = Config.view
 local S = Config.controls.contexts.spectating
 
+-- Elimine et en train de regarder (les boutons tactiles le lisent).
+local watching = false
+function Spectate.watching(): boolean
+	return watching
+end
+
 function Spectate.start()
 	local player = Players.LocalPlayer
 	local camera = workspace.CurrentCamera
 	local index = 1
-	local watching = false
 
 	-- Ceux qu'on peut regarder : les joueurs et les bots encore en vie (on ne
 	-- doit pas pouvoir les distinguer).
@@ -80,7 +87,7 @@ function Spectate.start()
 		index += if forward then 1 else -1
 		return Enum.ContextActionResult.Sink
 	end
-	ContextActionService:BindAction(
+	InputBus.bind(
 		"RoyaleRegarder",
 		shift,
 		false,
@@ -114,7 +121,7 @@ function Spectate.start()
 	local betRemote = remotes:WaitForChild(Config.remotes.bet) :: RemoteEvent
 	local quitRemote = remotes:WaitForChild(Config.remotes.quit) :: RemoteEvent
 	local current: Instance? = nil
-	ContextActionService:BindAction("RoyaleParier", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleParier", function(_, state: Enum.UserInputState)
 		if not watching or state ~= Enum.UserInputState.Begin then
 			return Enum.ContextActionResult.Pass
 		end
@@ -123,7 +130,7 @@ function Spectate.start()
 		end
 		return Enum.ContextActionResult.Sink
 	end, false, Enum.KeyCode[S.bet.gamepad], Enum.KeyCode[S.bet.keyboard])
-	ContextActionService:BindAction("RoyaleQuitter", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleQuitter", function(_, state: Enum.UserInputState)
 		if not watching or state ~= Enum.UserInputState.Begin then
 			return Enum.ContextActionResult.Pass
 		end
@@ -159,11 +166,17 @@ function Spectate.start()
 		local watched = list[index]
 		current = watched.actor
 		local bet = player:GetAttribute(Config.bets.attribute)
+		local touch = ButtonIcons.touch()
 		info.Text = string.format(
-			"Tu regardes %s%s — L1 / R1 changer · %s · B quitter",
+			if touch
+				then "Tu regardes %s%s · %s"
+				else "Tu regardes %s%s — L1 / R1 changer · %s · B quitter",
 			watched.key,
 			if watched.mate then " (ton équipe)" else "",
-			if typeof(bet) == "string" then "pari sur " .. bet else "X parier sur lui"
+			if typeof(bet) == "string"
+				then "pari sur " .. bet
+				elseif touch then "Parier pour miser sur lui"
+				else "X parier sur lui"
 		)
 		local root = list[index].character:FindFirstChild("HumanoidRootPart")
 		if root and root:IsA("BasePart") then

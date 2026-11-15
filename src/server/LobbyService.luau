@@ -71,6 +71,273 @@ local function part(
 	return p
 end
 
+-- L'AUTEL DE L'OEIL, au centre de la place (choisi avec Josh le 15 novembre
+-- 2026 : le brasero et son disque rouge faisaient pauvre). Une estrade a
+-- deux marches, un oeil grave au sol (iris en anneau de braise, pupille en
+-- fente), des fissures qui courent sur les marches, une vasque de pierre en
+-- flammes sur son pilier, et quatre pierres levees marquees de runes.
+local function altar()
+	local A = LB.altar
+	local stone, dark = rgb(LB.colors.stone), rgb(LB.colors.dark)
+	local ember = rgb(A.ember)
+	local flat = CFrame.Angles(0, 0, math.pi / 2)
+	local function disc(
+		name: string,
+		diameter: number,
+		height: number,
+		y: number,
+		color: Color3,
+		material: Enum.Material
+	): Part
+		local p = part(
+			name,
+			Vector3.new(height, diameter, diameter),
+			CFrame.new(ORIGIN + Vector3.new(0, y + height / 2, 0)) * flat,
+			color,
+			material
+		)
+		p.Shape = Enum.PartType.Cylinder
+		return p
+	end
+	-- L'estrade.
+	-- La marche du bas, en pierre claire : sombre, elle faisait une galette
+	-- noire sans relief (vu en image).
+	disc("Estrade", A.steps[1], A.stepHeight, 0, stone, Enum.Material.Slate)
+	disc("Estrade", A.steps[2], A.stepHeight, A.stepHeight, stone, Enum.Material.Limestone)
+	local top = A.stepHeight * 2
+	-- L'oeil grave : une pierre sombre, l'iris en anneau de braise, la pupille.
+	disc("OeilGrave", A.eye, 0.08, top, Color3.fromRGB(28, 22, 22), Enum.Material.Basalt).CanCollide =
+		false
+	local n = 28
+	for i = 1, n do
+		local a = i / n * math.pi * 2
+		local seg = part(
+			"Iris",
+			Vector3.new(A.iris * math.pi / n * 1.1, 0.1, 0.35),
+			CFrame.new(
+				ORIGIN + Vector3.new(math.cos(a) * A.iris / 2, top + 0.1, math.sin(a) * A.iris / 2)
+			) * CFrame.Angles(0, -a + math.pi / 2, 0),
+			ember,
+			Enum.Material.Neon
+		)
+		seg.CanCollide = false
+	end
+	local pupil = part(
+		"Pupille",
+		Vector3.new(0.9, 0.12, A.iris * 0.55),
+		CFrame.new(ORIGIN + Vector3.new(0, top + 0.1, 0)),
+		Color3.fromRGB(8, 4, 6),
+		Enum.Material.SmoothPlastic
+	)
+	pupil.CanCollide = false
+	-- Les fissures de braise, de l'oeil jusqu'au bord de l'estrade.
+	for i = 1, A.cracks do
+		local a = i / A.cracks * math.pi * 2 + random:NextNumber(-0.2, 0.2)
+		local from = A.iris / 2 + 0.4
+		local at = from
+		local heading = a
+		for _ = 1, 3 do
+			heading += random:NextNumber(-0.35, 0.35)
+			local step = random:NextNumber(1.2, 2.2)
+			local p0 = Vector3.new(math.cos(a) * at, 0, math.sin(a) * at)
+			local p1 = p0 + Vector3.new(math.cos(heading), 0, math.sin(heading)) * step
+			if p1.Magnitude > A.steps[2] / 2 - 0.3 then
+				break
+			end
+			local mid = (p0 + p1) / 2
+			local crack = part(
+				"Fissure",
+				Vector3.new(0.12, 0.06, step),
+				CFrame.lookAt(
+					ORIGIN + mid + Vector3.new(0, top + 0.04, 0),
+					ORIGIN + p1 + Vector3.new(0, top + 0.04, 0)
+				),
+				ember,
+				Enum.Material.Neon
+			)
+			crack.CanCollide = false
+			at = p1.Magnitude
+			a = math.atan2(p1.Z, p1.X)
+		end
+	end
+	-- Le pilier et sa vasque.
+	disc("Pilier", A.pillar[1], A.pillar[2], top, stone, Enum.Material.Limestone)
+	disc("Pilier", A.pillar[1] + 0.6, 0.4, top, dark, Enum.Material.Slate)
+	local bowlY = top + A.pillar[2]
+	disc("Vasque", A.bowl[1] * 0.6, A.bowl[2] * 0.5, bowlY, dark, Enum.Material.Slate)
+	local bowl = disc(
+		"Vasque",
+		A.bowl[1],
+		A.bowl[2] * 0.5,
+		bowlY + A.bowl[2] * 0.5,
+		dark,
+		Enum.Material.Slate
+	)
+	disc("Bord", A.bowl[1] + 0.3, 0.2, bowlY + A.bowl[2], ember, Enum.Material.Neon).CanCollide =
+		false
+	local coals = disc(
+		"Braises",
+		A.bowl[1] - 0.6,
+		0.2,
+		bowlY + A.bowl[2] - 0.15,
+		Color3.fromRGB(255, 120, 40),
+		Enum.Material.Neon
+	)
+	coals.CanCollide = false
+	local fire = Instance.new("Fire")
+	fire.Size = A.fire
+	fire.Heat = A.heat
+	fire.Color = Color3.fromRGB(255, 140, 50)
+	fire.SecondaryColor = Color3.fromRGB(200, 40, 15)
+	fire.Parent = coals
+	local sparks = Instance.new("ParticleEmitter")
+	sparks.Texture = Config.cosmetics.textures.spark
+	sparks.Color = ColorSequence.new(Color3.fromRGB(255, 190, 90), Color3.fromRGB(255, 70, 20))
+	sparks.Size = NumberSequence.new(0.4, 0)
+	sparks.LightEmission = 1
+	sparks.Rate = A.sparks
+	sparks.Lifetime = NumberRange.new(1.2, 2.4)
+	sparks.Speed = NumberRange.new(3, 7)
+	sparks.SpreadAngle = Vector2.new(25, 25)
+	sparks.Acceleration = Vector3.new(0, 2, 0)
+	sparks.Parent = coals
+	local glow = Instance.new("PointLight")
+	glow.Color = rgb(LB.colors.lantern)
+	glow.Range = A.lightRange
+	glow.Brightness = A.lightBrightness
+	glow.Parent = bowl
+	-- Les obelisques, aux quatre coins de l'estrade (choisi avec Josh le 15
+	-- novembre 2026 : les pierres levees faisaient des piquets) : un socle,
+	-- un fut qui s'affine en blocs joints, un chapeau, un oeil de braise qui
+	-- brule au sommet, et une rune de braise sur la face tournee vers l'autel.
+	local O = A.obelisk
+	for i = 1, 4 do
+		local a = (i - 0.5) / 4 * math.pi * 2
+		local at = ORIGIN
+			+ Vector3.new(
+				math.cos(a) * A.steps[1] / 2 * O.ring,
+				A.stepHeight,
+				math.sin(a) * A.steps[1] / 2 * O.ring
+			)
+		local facing = CFrame.lookAt(at, Vector3.new(ORIGIN.X, at.Y, ORIGIN.Z))
+		part(
+			"Obelisque",
+			Vector3.new(O.base[1], O.base[2], O.base[1]),
+			facing * CFrame.new(0, O.base[2] / 2, 0),
+			dark,
+			Enum.Material.Slate
+		)
+		part(
+			"Obelisque",
+			Vector3.new(O.base[1] - 0.5, 0.25, O.base[1] - 0.5),
+			facing * CFrame.new(0, O.base[2] + 0.125, 0),
+			stone,
+			Enum.Material.Slate
+		)
+		local column = facing
+			* CFrame.new(0, O.base[2] + 0.25, 0)
+			* CFrame.Angles(
+				random:NextNumber(-O.lean, O.lean),
+				0,
+				random:NextNumber(-O.lean, O.lean)
+			)
+		local seg = O.height / O.segments
+		local function width(k: number): (number, number)
+			local shrink = 1 - (1 - O.taper) * k / math.max(1, O.segments - 1)
+			return O.shaft[1] * shrink, O.shaft[2] * shrink
+		end
+		for k = 0, O.segments - 1 do
+			local w, d = width(k)
+			part(
+				"Obelisque",
+				Vector3.new(w, seg - 0.08, d),
+				column * CFrame.new(0, seg * k + seg / 2, 0),
+				stone,
+				Enum.Material.Slate
+			)
+			if k > 0 then
+				part(
+					"Joint",
+					Vector3.new(w + 0.14, 0.14, d + 0.14),
+					column * CFrame.new(0, seg * k, 0),
+					dark,
+					Enum.Material.Slate
+				)
+			end
+		end
+		local topW, topD = width(O.segments - 1)
+		part(
+			"Chapeau",
+			Vector3.new(topW + 0.5, 0.3, topD + 0.5),
+			column * CFrame.new(0, O.height + 0.15, 0),
+			dark,
+			Enum.Material.Slate
+		)
+		local orb = part(
+			"OeilBraise",
+			Vector3.one * O.orb,
+			column * CFrame.new(0, O.height + 0.3 + O.orb / 2, 0),
+			ember,
+			Enum.Material.Neon
+		)
+		orb.Shape = Enum.PartType.Ball
+		orb.CanCollide = false
+		local flame = Instance.new("Fire")
+		flame.Size = O.flame
+		flame.Heat = O.flame
+		flame.Color = Color3.fromRGB(255, 140, 50)
+		flame.SecondaryColor = Color3.fromRGB(200, 40, 15)
+		flame.Parent = orb
+		local light = Instance.new("PointLight")
+		light.Color = ember
+		light.Range = O.lightRange
+		light.Brightness = O.lightBrightness
+		light.Parent = orb
+		-- La rune, sur le bloc du milieu : un trait, deux branches, un losange.
+		local mid = math.floor(O.segments / 2)
+		local _, midD = width(mid)
+		local face = column * CFrame.new(0, seg * mid + seg / 2, -midD / 2 - 0.02)
+		for _, stroke in
+			{
+				{ CFrame.new(0, 0, 0), Vector3.new(0.1, seg * 0.7, 0.04) },
+				{
+					CFrame.new(0.17, seg * 0.2, 0) * CFrame.Angles(0, 0, -0.6),
+					Vector3.new(0.1, 0.45, 0.04),
+				},
+				{
+					CFrame.new(-0.17, seg * 0.2, 0) * CFrame.Angles(0, 0, 0.6),
+					Vector3.new(0.1, 0.45, 0.04),
+				},
+				{
+					CFrame.new(0, -seg * 0.3, 0) * CFrame.Angles(0, 0, math.pi / 4),
+					Vector3.new(0.22, 0.22, 0.04),
+				},
+			}
+		do
+			part("Rune", stroke[2], face * stroke[1], ember, Enum.Material.Neon).CanCollide = false
+		end
+		-- Quelques pierres tombees au pied.
+		for _ = 1, 3 do
+			local r = random:NextNumber(0.3, 0.6)
+			local spot = random:NextNumber(0, math.pi * 2)
+			part(
+				"Eboulis",
+				Vector3.new(r, r * 0.7, r),
+				facing
+					* CFrame.new(
+						math.cos(spot) * O.base[1] * 0.75,
+						r * 0.35,
+						math.sin(spot) * O.base[1] * 0.75
+					)
+					* CFrame.Angles(random:NextNumber(0, 1), random:NextNumber(0, 3), 0),
+				stone,
+				Enum.Material.Slate
+			).CanCollide =
+				false
+		end
+	end
+end
+
 -- La place : un disque de pavés uses, un muret effondre tout autour (et un
 -- mur invisible pour ne pas tomber), des lanternes, un brasero au centre.
 local function build()
@@ -151,23 +418,7 @@ local function build()
 		light.Brightness = 1.6
 		light.Parent = lamp
 	end
-	local brazier = part(
-		"Brasero",
-		Vector3.new(3, 6, 6),
-		CFrame.new(ORIGIN + Vector3.new(0, 1.5, 0)) * flat,
-		dark,
-		Enum.Material.CorrodedMetal
-	)
-	brazier.Shape = Enum.PartType.Cylinder
-	local fire = Instance.new("Fire")
-	fire.Size = 7
-	fire.Heat = 12
-	fire.Parent = brazier
-	local glow = Instance.new("PointLight")
-	glow.Color = lantern
-	glow.Range = 30
-	glow.Brightness = 2
-	glow.Parent = brazier
+	altar()
 	-- Des colonnes brisees en cercle, de hauteurs differentes (la silhouette
 	-- d'une ruine, pas un disque nu). Les deux panneaux sont sur l'axe Z (90 et
 	-- 270 degres) : avec un decalage d'un demi-cran, une colonne se dressait
@@ -177,8 +428,12 @@ local function build()
 	local arcTo = T.panelArcStart + #T.panels * T.panelArcStep
 	for i = 1, LB.columns do
 		local degrees = i / LB.columns * 360
-		-- Pas de colonne devant les panneaux « Comment jouer ».
+		-- Pas de colonne devant les panneaux « Comment jouer », ni dans
+		-- l'echoppe de la boutique (une colonne la traversait, vu en image).
 		if degrees > arcFrom and degrees < arcTo then
+			continue
+		end
+		if math.abs(degrees - LB.shopStall.angle) < LB.shopStall.clearance then
 			continue
 		end
 		local a = math.rad(degrees)
@@ -307,31 +562,9 @@ local function build()
 			end
 		end
 	end
-	-- L'embleme de l'Oeil, au sol autour du brasero : un anneau sombre et un
-	-- iris de braise.
-	local ring = part(
-		"Embleme",
-		Vector3.new(0.2, 22, 22),
-		CFrame.new(ORIGIN + Vector3.new(0, 0.05, 0)) * flat,
-		dark,
-		Enum.Material.Basalt
-	)
-	ring.Shape = Enum.PartType.Cylinder
-	ring.CanCollide = false
-	local iris = part(
-		"Iris",
-		Vector3.new(0.25, 14, 14),
-		CFrame.new(ORIGIN + Vector3.new(0, 0.1, 0)) * flat,
-		rgb(LB.colors.banner),
-		Enum.Material.Neon
-	)
-	iris.Shape = Enum.PartType.Cylinder
-	iris.CanCollide = false
-	-- (Plus opaque, l'iris faisait un aplat rouge vif, vu en image.)
-	iris.Transparency = 0.5
 	for _ = 1, 24 do
 		local a = random:NextNumber(0, math.pi * 2)
-		local d = random:NextNumber(12, r - 6)
+		local d = random:NextNumber(LB.altar.steps[1] / 2 + 1, r - 6)
 		local s = random:NextNumber(0.8, 2.4)
 		local rubble = part(
 			"Gravat",
@@ -449,6 +682,127 @@ local function tutorial()
 		end
 	end
 	return shown
+end
+
+-- L'echoppe de la boutique : comptoir, auvent, enseigne, lanterne, et le
+-- socle de la vitrine (LobbyScene y montre l'objet choisi, chez chacun).
+-- X devant le comptoir ouvre la boutique (ShopView ecoute l'invite).
+local function shopStall()
+	local S = LB.shopStall
+	local a = math.rad(S.angle)
+	local at = ORIGIN + Vector3.new(math.cos(a) * S.radius, 0, math.sin(a) * S.radius)
+	local facing = CFrame.lookAt(at, Vector3.new(ORIGIN.X, at.Y, ORIGIN.Z))
+	local wood = Color3.fromRGB(96, 66, 42)
+	local dark = rgb(LB.colors.dark)
+	local c = S.counter
+	local counter = part(
+		"Comptoir",
+		Vector3.new(c[1], c[2], c[3]),
+		facing * CFrame.new(0, c[2] / 2, 0),
+		wood,
+		Enum.Material.Wood
+	)
+	part(
+		"Plateau",
+		Vector3.new(c[1] + 0.6, 0.3, c[3] + 0.6),
+		facing * CFrame.new(0, c[2] + 0.15, 0),
+		dark,
+		Enum.Material.Slate
+	)
+	-- Les poteaux et l'auvent rayé, penche vers la place.
+	for side = -1, 1, 2 do
+		part(
+			"Poteau",
+			Vector3.new(0.5, S.awningHeight, 0.5),
+			facing * CFrame.new(side * (c[1] / 2 + 0.2), S.awningHeight / 2, c[3] / 2 + 0.5),
+			wood,
+			Enum.Material.Wood
+		)
+	end
+	local stripes = 6
+	for i = 1, stripes do
+		local stripe = part(
+			"Auvent",
+			Vector3.new((c[1] + 2) / stripes, 0.2, c[3] + 3.4),
+			facing
+				* CFrame.new(
+					-(c[1] + 2) / 2 + (i - 0.5) * (c[1] + 2) / stripes,
+					S.awningHeight,
+					-0.2
+				)
+				* CFrame.Angles(math.rad(-14), 0, 0),
+			if i % 2 == 0 then Color3.fromRGB(230, 215, 190) else rgb(S.awningColor),
+			Enum.Material.Fabric
+		)
+		stripe.CanCollide = false
+	end
+	-- L'enseigne : le mot, en machine a ecrire, couleur lanterne.
+	local sign = part(
+		"Enseigne",
+		Vector3.new(c[1] * 0.8, 1.8, 0.3),
+		facing * CFrame.new(0, S.awningHeight + 1.4, -1.2),
+		dark,
+		Enum.Material.Wood
+	)
+	local gui = Instance.new("SurfaceGui")
+	gui.Face = Enum.NormalId.Front
+	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
+	gui.PixelsPerStud = 50
+	gui.LightInfluence = 0
+	gui.Parent = sign
+	local word = Instance.new("TextLabel")
+	word.BackgroundTransparency = 1
+	word.Size = UDim2.fromScale(1, 1)
+	word.Font = (Enum.Font :: any)[Config.view.font]
+	word.TextScaled = true
+	word.TextColor3 = rgb(LB.colors.lantern)
+	word.Text = "BOUTIQUE"
+	word.Parent = gui
+	local lamp = part(
+		"Lanterne",
+		Vector3.new(1, 1.2, 1),
+		facing * CFrame.new(c[1] / 2 - 0.6, S.awningHeight - 1.2, -1.6),
+		rgb(LB.colors.lantern),
+		Enum.Material.Neon
+	)
+	lamp.CanCollide = false
+	local light = Instance.new("PointLight")
+	light.Color = rgb(LB.colors.lantern)
+	light.Range = 18
+	light.Brightness = 1.8
+	light.Parent = lamp
+	-- Le socle de la vitrine, devant le comptoir.
+	local p = S.pedestal
+	local pedestal = part(
+		"SocleVitrine",
+		Vector3.new(p[2], p[1], p[1]),
+		facing * CFrame.new(0, p[2] / 2, -S.pedestalAhead) * CFrame.Angles(0, 0, math.pi / 2),
+		dark,
+		Enum.Material.Slate
+	)
+	pedestal.Shape = Enum.PartType.Cylinder
+	local rim = part(
+		"BordVitrine",
+		Vector3.new(0.15, p[1] + 0.4, p[1] + 0.4),
+		-- Juste sous le dessus du socle : seul le bord depasse et luit (au
+		-- ras du dessus, tout le disque brillait, vu en image).
+		facing * CFrame.new(0, p[2] - 0.15, -S.pedestalAhead) * CFrame.Angles(0, 0, math.pi / 2),
+		rgb(LB.colors.lantern),
+		Enum.Material.Neon
+	)
+	rim.Shape = Enum.PartType.Cylinder
+	rim.CanCollide = false
+	-- X devant le comptoir : la boutique s'ouvre (cote client).
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.Name = Config.shop.stallPrompt
+	prompt.ActionText = "Ouvrir la boutique"
+	prompt.ObjectText = "Boutique"
+	prompt.HoldDuration = 0
+	prompt.MaxActivationDistance = S.promptDistance
+	prompt.RequiresLineOfSight = false
+	prompt.KeyboardKeyCode = Enum.KeyCode[Config.controls.contexts.lobby.invite.keyboard]
+	prompt.GamepadKeyCode = Enum.KeyCode[Config.controls.contexts.lobby.invite.gamepad]
+	prompt.Parent = counter
 end
 
 local function range(pair: { number }): number
@@ -831,6 +1185,7 @@ function LobbyService.start(
 	onLaunch = launcher
 	build()
 	print(string.format("[Royale] Salon : %d cachettes en vitrine", tutorial()))
+	shopStall()
 	-- Le decor n'est que visuel : il se construit apres le reste du
 	-- demarrage (differe ; task.spawn l'aurait execute tout de suite).
 	task.defer(function()

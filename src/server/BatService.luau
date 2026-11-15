@@ -14,7 +14,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 
-local CosmeticFx = require(script.Parent.CosmeticFx)
+local CosmeticFx = require(Royale:WaitForChild("Effets"):WaitForChild("CosmeticFx"))
 local GoulagService = require(script.Parent.GoulagService)
 local Roster = require(script.Parent.Roster)
 local ShopService = require(script.Parent.ShopService)

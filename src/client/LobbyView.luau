@@ -8,7 +8,6 @@
 	laissent passer aux commandes du jeu.
 ]]
 
-local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -18,6 +17,8 @@ local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 
 local ButtonIcons = require(script.Parent.ButtonIcons)
+local ShopView = require(script.Parent.ShopView)
+local InputBus = require(script.Parent.InputBus)
 
 local LobbyView = {}
 
@@ -249,8 +250,10 @@ function LobbyView.start()
 	-- Les boutons ne se redessinent que si leur liste change (Roblox deplace
 	-- la selection quand un element detruit la portait).
 	local shownHints = ""
-	local function showHints(list: { { binding: ButtonIcons.Binding, text: string } })
-		local key = (if ButtonIcons.gamepad() then "m" else "c")
+	type Hint = { binding: ButtonIcons.Binding, text: string, action: string? }
+	local function showHints(list: { Hint })
+		local touch = ButtonIcons.touch()
+		local key = (if touch then "t" elseif ButtonIcons.gamepad() then "m" else "c")
 		for _, h in list do
 			key ..= "|" .. h.text
 		end
@@ -258,14 +261,38 @@ function LobbyView.start()
 			return
 		end
 		shownHints = key
+		-- Au doigt, les pastilles montent sous la barre du haut : en bas, le
+		-- stick et le saut de Roblox les couvraient.
+		hints.AnchorPoint = if touch then Vector2.new(0.5, 0) else Vector2.new(0.5, 1)
+		hints.Position = if touch
+			then UDim2.new(0.5, 0, 0, H.barTop + H.barHeight + H.hintGap)
+			else UDim2.new(0.5, 0, 1, -H.hintBottom)
 		for _, c in hints:GetChildren() do
-			if c:IsA("Frame") then
+			if c:IsA("GuiObject") then
 				c:Destroy()
 			end
 		end
 		for i, h in list do
 			local primary = i == 1
-			local p = Instance.new("Frame")
+			-- Au doigt, chaque pastille se touche et lance son action, comme le
+			-- bouton de manette qu'elle montre.
+			local p: GuiObject
+			if touch then
+				local b = Instance.new("TextButton")
+				b.AutoButtonColor = false
+				b.Text = ""
+				local action = h.action
+				b.Activated:Connect(function()
+					if action == "shop" then
+						ShopView.toggle()
+					elseif action then
+						InputBus.fire(action, Enum.UserInputState.Begin, h.binding.gamepad)
+					end
+				end)
+				p = b
+			else
+				p = Instance.new("Frame")
+			end
 			p.Name = "Pastille" .. i
 			p.LayoutOrder = i
 			p.Size = UDim2.fromOffset(0, H.hintHeight)
@@ -275,7 +302,9 @@ function LobbyView.start()
 			round(p, UDim.new(0.5, 0))
 			outline(p, lantern, if primary then 0 else H.strokeTransparency)
 			local pad = Instance.new("UIPadding")
-			pad.PaddingLeft = UDim.new(0, H.hintInset)
+			-- Au doigt, pas d'icone a gauche : le texte se centre.
+			pad.PaddingLeft =
+				UDim.new(0, if touch then H.chipPadding + H.hintInset else H.hintInset)
 			pad.PaddingRight = UDim.new(0, H.chipPadding + H.hintInset)
 			pad.Parent = p
 			p.Parent = hints
@@ -292,15 +321,38 @@ function LobbyView.start()
 	fit.Parent = bar
 	local fitHints = Instance.new("UIScale")
 	fitHints.Parent = hints
-	local function refit()
+	-- La largeur se mesure a l'echelle 1, cache, le temps d'une image, et
+	-- seulement quand le contenu ou l'ecran change : les tailles de texte
+	-- s'arrondissent, donc une mesure sous echelle ne vaut pas la largeur
+	-- vraie fois l'echelle, et la recalculer a chaque image faisait trembler
+	-- barre et boutons sans jamais se poser (mesure dans Studio le 15
+	-- novembre 2026 : 0,43 -> 0,47 -> 0,45 -> 0,43...).
+	local fittedKey = ""
+	-- La cle du contenu en cours de mesure : un changement pendant l'image
+	-- de mesure relance une mesure au lieu d'etre pris pour mesure.
+	local measuring: string? = nil
+	local function refit(key: string)
 		local camera = workspace.CurrentCamera
-		if camera == nil or fit.Scale <= 0 then
+		if camera == nil then
 			return
 		end
-		local widest = math.max(bar.AbsoluteSize.X, hints.AbsoluteSize.X) / fit.Scale
-		if widest > 0 then
-			fit.Scale = math.min(1, (camera.ViewportSize.X - 2 * H.screenMargin) / widest)
-			fitHints.Scale = fit.Scale
+		key ..= "|" .. camera.ViewportSize.X
+		if measuring then
+			fittedKey = measuring
+			measuring = nil
+			local widest = math.max(bar.AbsoluteSize.X, hints.AbsoluteSize.X)
+			if widest > 0 then
+				fit.Scale = math.min(1, (camera.ViewportSize.X - 2 * H.screenMargin) / widest)
+				fitHints.Scale = fit.Scale
+			end
+			bar.Visible = true
+			hints.Visible = true
+		elseif key ~= fittedKey then
+			measuring = key
+			bar.Visible = false
+			hints.Visible = false
+			fit.Scale = 1
+			fitHints.Scale = 1
 		end
 	end
 	-- « 1450 » se lit « 1 450 ».
@@ -324,7 +376,7 @@ function LobbyView.start()
 	)
 		-- En priorite haute : les commandes du jeu (Y pousser) avalaient le
 		-- bouton (vu en sonde).
-		ContextActionService:BindActionAtPriority(
+		InputBus.bindAtPriority(
 			name,
 			function(_, state: Enum.UserInputState)
 				if state ~= Enum.UserInputState.Begin or not inLobby() then
@@ -369,8 +421,17 @@ function LobbyView.start()
 		return true
 	end)
 
+	local shopOpen = false
+	ShopView.onPreview(function(_, open: boolean)
+		shopOpen = open
+	end)
 	RunService.RenderStepped:Connect(function()
-		local here = inLobby() and workspace:GetAttribute(Config.match.phaseAttribute) ~= nil
+		-- Boutique ouverte : la vitrine prend l'ecran, la barre et les
+		-- boutons du salon s'effacent (ils passaient sous le panneau, vu en
+		-- image).
+		local here = inLobby()
+			and workspace:GetAttribute(Config.match.phaseAttribute) ~= nil
+			and not shopOpen
 		gui.Enabled = here
 		if not here then
 			return
@@ -407,21 +468,55 @@ function LobbyView.start()
 		readyChip.BackgroundColor3 = rgb(H.ready)
 		readyChip.BackgroundTransparency = if ready then 0 else 1
 		readyStroke.Transparency = if ready then 1 else 0.6
-		local list = {
-			{ binding = K.ready, text = if ready then "Annuler" else "Prêt" },
-			{ binding = K.mode, text = "Mode" },
-			{ binding = K.invite, text = "Inviter (maintenu)" },
-			{ binding = K.robloxInvite, text = "Amis Roblox" },
+		local touch = ButtonIcons.touch()
+		local invite = recent(player:GetAttribute(LB.inviteAttribute), LB.inviteSeconds)
+		local list: { Hint } = {
+			{
+				binding = K.ready,
+				text = if ready then "Annuler" else "Prêt",
+				action = "RoyaleSalonPret",
+			},
+			{ binding = K.mode, text = "Mode", action = "RoyaleSalonMode" },
+			-- Inviter se fait sur l'invite au-dessus d'un joueur (on la touche).
+			{
+				binding = K.invite,
+				text = if touch then "Inviter : va vers un joueur" else "Inviter (maintenu)",
+			},
+			{ binding = K.robloxInvite, text = "Amis Roblox", action = "RoyaleSalonAmis" },
+			{ binding = K.shop, text = "Boutique", action = "shop" },
 		}
+		if touch and invite then
+			table.insert(
+				list,
+				1,
+				{ binding = K.invite, text = "Accepter", action = "RoyaleSalonAccepter" }
+			)
+		end
 		if count > 1 then
-			table.insert(list, { binding = K.leaveGroup, text = "Quitter le groupe" })
+			table.insert(list, {
+				binding = K.leaveGroup,
+				text = "Quitter le groupe",
+				action = "RoyaleSalonQuitter",
+			})
 		end
 		showHints(list)
-		refit()
+		refit(table.concat({
+			shownHints,
+			badge.Text,
+			xpTitle.Text,
+			credits.Text,
+			modeText.Text,
+			groupText.Text,
+			readyText.Text,
+		}, "|"))
 		local text = ""
-		local invite = recent(player:GetAttribute(LB.inviteAttribute), LB.inviteSeconds)
 		if invite then
-			text = invite .. " t'invite dans son groupe — X pour accepter"
+			text = invite
+				.. (
+					if touch
+						then " t'invite dans son groupe — touche Accepter"
+						else " t'invite dans son groupe — X pour accepter"
+				)
 		end
 		local depart = workspace:GetAttribute(LB.countdownAttribute)
 		if typeof(depart) == "string" then
@@ -446,6 +541,9 @@ function LobbyView.start()
 				else text .. "\nDernière partie : " .. reward
 		end
 		center.Text = text
+		-- Au doigt, les pastilles sont en haut : le texte descend (il les
+		-- chevauchait, vu en image).
+		center.Position = UDim2.fromScale(0.5, if touch then Config.touch.lobbyTextY else 0.22)
 	end)
 end
 

@@ -769,3 +769,110 @@ Les apparences n'étaient que des changements de couleur. Choisi avec Josh :
   cristal, magma ; légendaire « La Fissure »), et 3 au passe à la place de
   3 émotes premium (paliers 16, 22, 27 ; légendaire « Batte de l'Œil » avec
   un œil qui regarde autour). Purement visible : le combat ne change pas.
+
+## La boutique au salon, la vitrine et les récompenses quotidiennes (14 novembre 2026, avec Josh)
+
+- **La boutique se voit** : « Boutique » dans la barre de boutons du salon,
+  et une échoppe sur la place (comptoir, auvent rayé, enseigne) où X ouvre
+  la boutique (`LobbyService`, `Config.lobby.shopStall`).
+- **La vitrine** (`ShopShowcase`) : boutique ouverte, la caméra se tourne
+  vers le socle de l'échoppe et l'objet choisi s'y montre, chez toi seul :
+  comète qui file en rond, traînée qui court, cocon, aspiration qui monte,
+  ton personnage qui tient la batte ou joue l'émote, le titre. Pour ça,
+  `CosmeticFx` et `Signatures` passent dans `src/shared/Effets` (partagés
+  client / serveur ; pas de la logique pure, d'où le sous-dossier).
+- **Les récompenses quotidiennes** (`Daily`, `DailyService`, `DailyView`,
+  `Config.daily`) : un cycle de 4 semaines ; un jour de connexion avance
+  d'une case, un jour raté fait reculer d'une case (choix de Josh) ; J2 un
+  objet épique, J7 un légendaire avec son effet signature (Pluie d'étoiles,
+  Tempête, Givre éternel, Phénix), introuvables ailleurs ; des crédits et
+  des fragments les autres jours ; un objet déjà obtenu rend des crédits
+  au cycle suivant. Écran du jour à l'arrivée (les 7 cases de la semaine).
+
+## La boutique en cartes, le quotidien illustré et l'autel (nuit du 15 au 16 novembre 2026)
+
+- **La boutique en cartes** (`ShopView`, `ItemThumb`, `Config.shop.ui` /
+  `thumb`) : une image 3D par objet (ViewportFrame : la vraie batte, le
+  vrai cocon, la comète et sa queue, une silhouette pour l'émote ; Roblox
+  n'y dessine pas les particules), son nom, sa rareté en couleur, son prix ;
+  grille à la croix (haut, bas, gauche, droite), onglets L1 / R1. Taille
+  fixe mise à l'échelle de l'écran.
+- **Les récompenses quotidiennes** dans le même style (`DailyView`).
+- **L'autel de l'Œil** remplace le brasero au centre du salon
+  (`LobbyService`, `Config.lobby.altar`).
+- **Bogue corrigé** : les touches clavier des onglets n'étaient pas
+  branchées (une fonction à deux valeurs au milieu d'une liste d'arguments
+  n'en garde qu'une).
+- **Fiche de lancement** : `docs/STRATEGIE-LANCEMENT.md`. Point majeur
+  trouvé : le jeu n'a pas de commandes tactiles.
+
+## La boutique embellie, les obélisques, le jeu au téléphone (15 novembre 2026)
+
+- **La boutique plus belle** (`ShopView`, `UiKit`) : fond en dégradé et
+  double filet ; cartes teintées à la couleur de leur rareté, un halo doux
+  derrière l'image, la rareté écrite en haut, le prix avec sa pièce (ou son
+  cristal) ; la carte choisie grossit ; une barre du bas détaille l'objet
+  choisi et porte le bouton « Acheter · 900 crédits » (ou « Il te manque… »,
+  « Déjà à toi », « Porter », « Retirer ») ; porte-monnaie en pastilles ;
+  temps avant la nouvelle boutique du jour. Pièces et cristaux dessinés en
+  2D (nets à toute taille) ; leurs images 3D refaites (pile de pièces,
+  bouquet de cristaux), et le cocon a un cœur et des veines lumineuses.
+- **Images pixelisées** : une image 3D (ViewportFrame) se dessine à la
+  taille qu'elle a à l'écran. Dans une petite fenêtre de Studio (celle des
+  essais faisait 502 × 429 pixels), elles sont forcément floues ; sur un
+  vrai écran elles sont plus nettes. Les cartes sont plus grandes (images de
+  124 pixels du dessin), sans pouvoir faire mieux que la taille réelle.
+- **Le quotidien plus beau** (`DailyView`) : un voile sur le salon, la
+  récompense du jour en grand qui tourne sur des rayons et un halo à la
+  couleur de sa rareté, puis la piste des 7 jours (jours pris assombris et
+  cochés, le jour même qui brille, le jour 7 plus large), le bouton
+  « Super ! ». Au téléphone, la grande image se cache pour que le texte
+  reste lisible.
+- **Les obélisques** remplacent les pierres levées autour de l'autel
+  (« des piquets ») : socle, fût en trois blocs joints qui s'affine,
+  chapeau, un œil de braise qui brûle au sommet, une rune sur la face
+  tournée vers l'autel (`Config.lobby.altar.obelisk`).
+- **Le jeu au téléphone** (`TouchControls`, `InputBus`, `Config.touch`) :
+  - le stick et le saut restent ceux de Roblox ; on regarde en glissant ;
+  - nos boutons en arc autour du saut, au pouce droit : Frapper (le plus
+    gros), Objet (maintenu : viser, lâcher : lancer), Pousser (maintenu
+    sur un K.O. : porter), Accroupi (en courant : glisser ; maintenu :
+    ramper), Courir (bascule), les flèches du sac ; ils changent de nom
+    selon la situation (caché : Jaillir / Sortir ; en portant : Jeter /
+    Poser) ; en haut à droite : Carte, Danger, Ici, Emote ;
+  - chaque bouton lance l'action du jeu comme le bouton de manette qu'il
+    remplace (`InputBus`) : aucune règle recopiée ;
+  - le saut au doigt sert aussi à s'agripper aux rebords ;
+  - la visée du départ se fait en glissant le doigt ;
+  - au salon, les pastilles du bas se touchent (Prêt, Mode, Amis Roblox,
+    Boutique, Accepter une invitation, Quitter le groupe) et montent en
+    haut de l'écran (en bas, le stick et le saut les couvraient) ;
+  - la boutique : toucher une carte la choisit, la toucher encore (ou le
+    bouton du bas) l'achète, la croix ferme ; au téléphone, le panneau
+    prend toute la largeur et raccourcit au lieu de rapetisser (texte
+    lisible) ;
+  - éliminé : ◀ / ▶ (changer de joueur), Parier, Quitter ;
+  - le sac se décale à gauche au doigt (au milieu, il passait sous
+    Frapper) ; les textes d'aide parlent des boutons de l'écran, pas de la
+    manette ;
+  - une manette branchée au téléphone cache les boutons ;
+  - un test vérifie que les boutons ne se touchent pas et tiennent dans le
+    plus petit écran de téléphone courant (667 × 375).
+- **Pas fait au téléphone** : la liste des joueurs (Tab / R3) n'a pas de
+  bouton (Roblox a la sienne) ; l'écran de jeu (Hud) n'a pas été revu en
+  détail pour un petit écran.
+
+## La boutique du jour à 5, le salon qui ne tremble plus (15 novembre 2026)
+
+- **5 objets du jour** au lieu de 6 (demandé par Josh) : une seule ligne
+  de cartes. Un test vérifie qu'elle tient dans la largeur du panneau.
+- **Décidé sans Josh** : le panneau de la boutique est un peu plus haut
+  (790 au lieu de 700 pixels de dessin) pour que « Toujours là » tienne
+  aussi sans défiler. En contrepartie, tout le panneau est un peu plus petit
+  à l'écran. Au téléphone, on défile toujours (l'écran est trop bas).
+- **Le tremblement du salon** : la barre et les pastilles se faisaient
+  tenir dans l'écran en mesurant leur largeur à chaque image, déjà réduite.
+  Les tailles de texte s'arrondissent, donc la mesure ne se posait jamais :
+  l'échelle sautait de 0,43 à 0,47 à chaque image (mesuré dans Studio). La
+  largeur se mesure maintenant à taille réelle, cachée le temps d'une
+  image, seulement quand le contenu ou l'écran change.

@@ -63,6 +63,8 @@ function Progression.fill(data: any, version: number): any
 	out.equipped = if typeof(out.equipped) == "table" then out.equipped else {}
 	out.pass = if typeof(out.pass) == "table" then out.pass else {}
 	out.receipts = if typeof(out.receipts) == "table" then out.receipts else {}
+	-- Les recompenses quotidiennes : le dernier jour recupere et la case.
+	out.daily = if typeof(out.daily) == "table" then out.daily else { step = 0 }
 	return out
 end
 

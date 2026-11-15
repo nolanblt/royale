@@ -181,6 +181,31 @@ function Signatures.comet(kind: string, core: BasePart, def: any): () -> ()
 			speed = S.orbitSpeed,
 			tilt = CFrame.Angles(0, 0, math.rad(25)),
 		})
+	elseif kind == "starShower" then
+		-- Deux nuees d'etoiles, sur deux plans croises, qui tournent en sens
+		-- contraires.
+		local S = SG.starShower
+		for plane = 0, 1 do
+			local h, weld = hub(core)
+			for i = 1, S.motes do
+				local a = i / S.motes * math.pi * 2
+				local star = piece(
+					Enum.PartType.Ball,
+					Vector3.one * S.moteSize,
+					if i % 2 == 0 then rgb(def.a) else rgb(def.b),
+					true
+				)
+				star.CFrame = h.CFrame * CFrame.new(math.cos(a) * S.orbit, 0, math.sin(a) * S.orbit)
+				attach(h, star)
+			end
+			table.insert(things, h)
+			table.insert(spinners, {
+				weld = weld,
+				axis = Vector3.yAxis,
+				speed = if plane == 0 then S.spin else -S.spin,
+				tilt = CFrame.Angles(math.rad(if plane == 0 then 60 else -60), 0, 0),
+			})
+		end
 	elseif kind == "emberEye" or kind == "firstGaze" then
 		local S = SG[kind]
 		local h = hub(core)
@@ -338,6 +363,32 @@ function Signatures.trail(kind: string, def: any): (on: boolean, root: BasePart)
 			rim.Parent = traceFolder()
 			fadeOut(disc, S.fade, { Size = Vector3.new(0.08, 0.2, 0.2) })
 			fadeOut(rim, S.fade, { Size = Vector3.new(0.06, 0.2, 0.2) })
+		elseif kind == "frostSteps" then
+			-- Des cristaux de glace jaillissent du sol, penches, puis fondent.
+			for k = 1, S.spikes do
+				local h = S.height[1] + math.random() * (S.height[2] - S.height[1])
+				local spike =
+					piece(Enum.PartType.Block, Vector3.new(0.35, 0.1, 0.35), rgb(def.a), false)
+				spike.Material = Enum.Material.Ice
+				spike.Transparency = 0.15
+				local lean = ground
+					* CFrame.Angles(0, k / S.spikes * math.pi * 2, 0)
+					* CFrame.new(0.4, 0, 0)
+					* CFrame.Angles(0, 0, math.rad(-20 - math.random() * 15))
+				spike.CFrame = lean
+				spike.Anchored = true
+				spike.Parent = traceFolder()
+				-- Il pousse d'un coup, puis il fond.
+				TweenService:Create(spike, TweenInfo.new(S.grow, Enum.EasingStyle.Back), {
+					Size = Vector3.new(0.35, h, 0.35),
+					CFrame = lean * CFrame.new(0, h / 2, 0),
+				}):Play()
+				task.delay(S.grow, function()
+					if spike.Parent then
+						fadeOut(spike, S.fade, { Size = Vector3.new(0.2, 0.1, 0.2) })
+					end
+				end)
+			end
 		end
 	end
 end
@@ -410,6 +461,39 @@ function Signatures.capture(kind: string, root: BasePart, def: any): () -> ()
 				disc.CFrame = CFrame.new(root.Position) * CFrame.Angles(0, 0, math.pi / 2 + i * 0.5)
 			end
 		end)
+	elseif kind == "phoenix" then
+		-- Deux ailes de feu : des plumes en eventail de chaque cote, qui
+		-- battent au-dessus de l'aspire.
+		local S = SG.phoenix
+		local feathers: { { part: Part, side: number, rank: number } } = {}
+		for _, side in { -1, 1 } do
+			for rank = 1, S.feathers do
+				local f = add(
+					piece(
+						Enum.PartType.Block,
+						Vector3.new(S.width, 0.12, S.length * (1 - 0.08 * rank)),
+						if rank % 2 == 0 then rgb(def.a) else rgb(def.b),
+						true
+					)
+				)
+				table.insert(feathers, { part = f, side = side, rank = rank })
+			end
+		end
+		stop = loop(function()
+			return root.Parent ~= nil
+		end, function(t: number)
+			local base = CFrame.new(root.Position + Vector3.new(0, S.above, 0))
+				* root.CFrame.Rotation
+			local beat = math.sin(t * S.flap) * math.rad(S.spread)
+			for _, f in feathers do
+				-- Chaque plume part du dos, ouverte en eventail, et bat.
+				local fan = math.rad(-20 + f.rank * 12)
+				f.part.CFrame = base
+					* CFrame.Angles(0, 0, f.side * (beat + math.rad(10)))
+					* CFrame.Angles(fan, f.side * math.rad(90), 0)
+					* CFrame.new(0, 0, -f.part.Size.Z / 2)
+			end
+		end)
 	else -- innerEye
 		local S = SG.innerEye
 		local parts = eyeParts(CFrame.new(), S.eye, S.iris, S.pupil, rgb(S.white), rgb(def.a))
@@ -471,6 +555,35 @@ function Signatures.bat(kind: string, barrel: BasePart, def: any)
 		fire.Size = 2
 		fire.Heat = 4
 		fire.Parent = barrel
+	elseif kind == "stormBat" then
+		-- Des eclairs en zigzag le long du fut, qui crepitent (s'allument et
+		-- s'eteignent au hasard).
+		local S = SG.stormBat
+		local arcs: { Part } = {}
+		for i = 1, S.arcs do
+			local around = i / S.arcs * math.pi * 2
+			for k = 0, 2 do
+				local seg = piece(
+					Enum.PartType.Block,
+					Vector3.new(length * 0.3, S.width, S.width),
+					rgb(def.b),
+					true
+				)
+				seg.CFrame = barrel.CFrame
+					* CFrame.Angles(around, 0, 0)
+					* CFrame.new((k - 1) * length * 0.28, width / 2 + 0.03, 0)
+					* CFrame.Angles(0, if k % 2 == 0 then 0.5 else -0.5, 0)
+				attach(barrel, seg)
+				table.insert(arcs, seg)
+			end
+		end
+		loop(function()
+			return barrel.Parent ~= nil
+		end, function()
+			for _, seg in arcs do
+				seg.Transparency = if math.random() < S.flicker then 1 else 0
+			end
+		end)
 	elseif kind == "eyeBat" then
 		-- Un oeil au bout, qui regarde autour de lui.
 		local S = SG.eyeBat

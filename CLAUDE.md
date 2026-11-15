@@ -186,9 +186,24 @@ Rokit, StyLua, Selene, Lune, GitHub Actions, tous les chiffres dans
   main avec 15 skins + 3 du passe (`BatService`), vus en vitrine. Le pont
   MCP se bloque parfois (« Start play hasn't finished yet ») après un
   lancement trop long : Josh appuie sur Play lui-même, ça repart.
-- **À faire plus tard (demandé par Josh le 14 novembre 2026)** : des
-  petites récompenses quotidiennes (se connecter chaque jour). À concevoir
-  avec lui avant tout code : quoi, combien, une série qui grandit ou non.
+- **14 novembre 2026, la boutique au salon** : bouton et échoppe, vitrine
+  3D (`ShopShowcase`, effets partagés dans `src/shared/Effets`), récompenses
+  quotidiennes sur 4 semaines (`Daily`, `DailyService`, `DailyView`).
+- **Nuit du 15 au 16 novembre 2026** : boutique en cartes avec images 3D
+  (`ItemThumb`), autel de l'Œil au centre du salon, fiche de lancement
+  (`docs/STRATEGIE-LANCEMENT.md`).
+- **15 novembre 2026, le téléphone** : boutique et quotidien embellis
+  (`UiKit` : dégradés, halos, pièce et cristal dessinés), obélisques autour
+  de l'autel ; le jeu se joue au doigt (`TouchControls` en arc autour du
+  saut de Roblox, `InputBus` : un bouton tactile lance l'action comme le
+  bouton de manette qu'il remplace ; pastilles du salon touchables ; visée
+  au doigt ; `Config.touch`). Pour essayer sur ordinateur :
+  `ButtonIcons.forceTouch(true)` depuis un `LocalScript` injecté. Jamais
+  essayé sur un vrai téléphone.
+  Puis : 5 objets du jour (une ligne), panneau de boutique plus haut, et
+  le salon ne tremble plus (`LobbyView.refit` mesure à l'échelle 1, caché
+  une image, quand le contenu change — une échelle recalculée à chaque
+  image depuis une mesure réduite ne se pose jamais).
 
 ## La place et la recette
 

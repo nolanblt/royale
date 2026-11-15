@@ -19,13 +19,16 @@
 	tete et le bassin) ne te voit plus.
 ]]
 
-local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
+
+local ButtonIcons = require(script.Parent.ButtonIcons)
+local InputBus = require(script.Parent.InputBus)
 
 local Controls = {}
 
@@ -289,36 +292,31 @@ function Controls.start()
 		return true
 	end
 
-	ContextActionService:BindAction(
-		"RoyaleCourir",
-		function(_, state: Enum.UserInputState, input: InputObject)
-			if input.KeyCode == Enum.KeyCode[onFoot.sprint.gamepad] then
-				-- A la manette : bascule.
-				if state == Enum.UserInputState.Begin then
-					running = not running
-					crouched = false
-					standUp()
-				end
-			else
-				running = state == Enum.UserInputState.Begin
-				if running then
-					crouched = false
-					standUp()
-				end
+	InputBus.bind("RoyaleCourir", function(_, state: Enum.UserInputState, input: InputObject)
+		if input.KeyCode == Enum.KeyCode[onFoot.sprint.gamepad] then
+			-- A la manette : bascule.
+			if state == Enum.UserInputState.Begin then
+				running = not running
+				crouched = false
+				standUp()
 			end
-			apply()
-			return Enum.ContextActionResult.Pass
-		end,
-		false,
-		table.unpack(keys(onFoot.sprint))
-	)
+		else
+			running = state == Enum.UserInputState.Begin
+			if running then
+				crouched = false
+				standUp()
+			end
+		end
+		apply()
+		return Enum.ContextActionResult.Pass
+	end, false, table.unpack(keys(onFoot.sprint)))
 
 	-- B : glisser en courant ; a l'arret, un appui s'accroupit et un
 	-- maintien s'allonge (on rampe) ; allonge, B se releve ; en portant, B
 	-- pose.
 	local postureToken = 0
 	local postureHeld = false
-	ContextActionService:BindAction("RoyalePosture", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyalePosture", function(_, state: Enum.UserInputState)
 		if state == Enum.UserInputState.End then
 			if postureHeld then
 				-- Relache avant le maintien : un appui, on s'accroupit.
@@ -364,7 +362,7 @@ function Controls.start()
 	end, false, table.unpack(merged({ onFoot.posture, carryingCtx.putDown })))
 
 	-- A : le saut reste a Roblox ; en l'air pres d'un rebord, on s'agrippe.
-	ContextActionService:BindAction("RoyaleRebord", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleRebord", function(_, state: Enum.UserInputState)
 		if state ~= Enum.UserInputState.Begin or mantling then
 			return Enum.ContextActionResult.Pass
 		end
@@ -375,8 +373,20 @@ function Controls.start()
 		return Enum.ContextActionResult.Pass
 	end, false, table.unpack(keys(onFoot.jump)))
 
+	-- Au doigt, le saut est le bouton de Roblox, pas une touche : sa demande
+	-- de saut sert aussi a s'agripper (comme A en l'air).
+	UserInputService.JumpRequest:Connect(function()
+		if mantling or not ButtonIcons.touch() then
+			return
+		end
+		local humanoid, root = parts()
+		if humanoid and root and not isDown() and not carrying() then
+			tryMantle(humanoid, root)
+		end
+	end)
+
 	-- R2 : frapper ; cache, sortir en force (la porte dans la figure).
-	ContextActionService:BindAction("RoyaleFrapper", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleFrapper", function(_, state: Enum.UserInputState)
 		if state ~= Enum.UserInputState.Begin then
 			return Enum.ContextActionResult.Pass
 		end
@@ -422,7 +432,7 @@ function Controls.start()
 		end
 		return false
 	end
-	ContextActionService:BindAction("RoyalePousser", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyalePousser", function(_, state: Enum.UserInputState)
 		-- Hors partie (au salon), Y sert a autre chose.
 		if player:GetAttribute(Config.match.aliveAttribute) == nil then
 			return Enum.ContextActionResult.Pass
@@ -456,7 +466,7 @@ function Controls.start()
 	end, false, table.unpack(merged({ onFoot.shove, carryingCtx.throw })))
 
 	-- Sortir : seulement quand on est cache (sinon X sert aux invites).
-	ContextActionService:BindAction("RoyaleSortir", function(_, state: Enum.UserInputState)
+	InputBus.bind("RoyaleSortir", function(_, state: Enum.UserInputState)
 		if state ~= Enum.UserInputState.Begin then
 			return Enum.ContextActionResult.Pass
 		end
