@@ -54,7 +54,9 @@ return function()
 		l.Color = LIGHT
 		l.Range = range
 		l.Brightness = brightness
-		l.Shadows = true
+		-- Sans ombres : des dizaines de petites lumieres avec ombres pesaient
+		-- sur l'affichage (le jeu ramait chez Josh).
+		l.Shadows = false
 		l.Parent = on
 	end
 

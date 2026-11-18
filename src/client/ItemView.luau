@@ -26,6 +26,7 @@ local Config = require(Royale:WaitForChild("Config"))
 
 local ButtonIcons = require(script.Parent.ButtonIcons)
 local InputBus = require(script.Parent.InputBus)
+local UiKit = require(script.Parent.UiKit)
 local Throw = require(Royale:WaitForChild("Throw"))
 
 local ItemView = {}
@@ -172,7 +173,9 @@ function ItemView.start()
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(refit)
 	UserInputService.LastInputTypeChanged:Connect(refit)
 	refit()
-	local slots: { [number]: { frame: Frame, name: TextLabel, stroke: UIStroke } } = {}
+	local slots: { [number]: { frame: Frame, name: TextLabel, stroke: UIStroke, pop: UIScale } } =
+		{}
+	local lastBag: { [number]: string } = {}
 	for i = BG.hands, BG.slots do
 		local f = Instance.new("Frame")
 		f.Name = "Place" .. i
@@ -181,12 +184,25 @@ function ItemView.start()
 		-- Au doigt, on touche la place qu'on veut tenir (plus de fleches).
 		f.Active = true
 		local index = i
+		-- Toucher : la prendre en main ; maintenir : la lacher.
+		local pressed: InputObject? = nil
 		f.InputBegan:Connect(function(input: InputObject)
 			if
 				input.UserInputType == Enum.UserInputType.Touch
 				and player:GetAttribute(Config.match.aliveAttribute) == true
 			then
 				itemRemote:FireServer("select", index)
+				pressed = input
+				task.delay(BG.dropHoldSeconds, function()
+					if pressed == input and index ~= BG.hands then
+						itemRemote:FireServer("drop")
+					end
+				end)
+			end
+		end)
+		f.InputEnded:Connect(function(input: InputObject)
+			if pressed == input then
+				pressed = nil
 			end
 		end)
 		f.BackgroundColor3 = Color3.fromRGB(20, 14, 14)
@@ -198,8 +214,19 @@ function ItemView.start()
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		stroke.Parent = f
 		local name = textLabel(f, UDim2.fromScale(1, 1), UDim2.fromScale(0.5, 0), 16)
-		slots[i] = { frame = f, name = name, stroke = stroke }
+		local pop = Instance.new("UIScale")
+		pop.Parent = f
+		slots[i] = { frame = f, name = name, stroke = stroke, pop = pop }
 	end
+	-- Sous le sac : comment changer d'objet et le lacher (Josh ne savait pas).
+	local bagHelp = textLabel(
+		gui,
+		UDim2.new(V.slotFitFraction, 0, 0, V.bagHelpSize + 4),
+		UDim2.new(0.5, 0, 1, -(V.slotBottom - 2)),
+		V.bagHelpSize
+	)
+	bagHelp.TextTransparency = 0.25
+	table.insert(followers, bagHelp)
 	local selectedName = textLabel(
 		gui,
 		UDim2.new(V.slotFitFraction, 0, 0, 24),
@@ -263,6 +290,14 @@ function ItemView.start()
 			d.Transparency = 1
 		end
 	end
+
+	InputBus.bind("RoyaleObjetLacher", function(_, state)
+		if state == Enum.UserInputState.Begin and playing() then
+			itemRemote:FireServer("drop")
+			return Enum.ContextActionResult.Sink
+		end
+		return Enum.ContextActionResult.Pass
+	end, false, table.unpack(keys(onFoot.dropItem)))
 
 	InputBus.bind(
 		"RoyaleObjetChoix",
@@ -435,8 +470,23 @@ function ItemView.start()
 		local inMatch = playing()
 		bar.Visible = inMatch
 		selectedName.Visible = inMatch
+		bagHelp.Visible = inMatch
+		bagHelp.Text = if ButtonIcons.touch()
+			then "Touche une case pour la prendre · maintiens-la pour lâcher"
+			else string.format(
+				"%s / %s changer d'objet · %s lâcher",
+				ButtonIcons.name(onFoot.previousItem),
+				ButtonIcons.name(onFoot.nextItem),
+				ButtonIcons.name(onFoot.dropItem)
+			)
 		for i, slot in slots do
 			local def = I[bag[i]]
+			-- Un objet qui arrive : sa case saute (on le voit tout de suite).
+			local now_ = bag[i] or ""
+			if now_ ~= "" and now_ ~= (lastBag[i] or "") then
+				UiKit.pop(slot.pop, BG.newItemPop, 1, 0.3)
+			end
+			lastBag[i] = now_
 			slot.name.Text = if def then def.name elseif i == BG.hands then "Mains nues" else ""
 			slot.stroke.Color = if def
 				then rgb(Config.rarities[def.rarity].color)

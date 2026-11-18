@@ -83,31 +83,27 @@ function Lobby.join(s: State, host: string, id: string, maxGroup: number): boole
 end
 
 -- Le suivant dans une liste, en boucle.
-local function nextOf(list: { string }, current: string): string
-	local i = table.find(list, current) or 0
-	return list[i % #list + 1]
-end
-
--- Le mode suivant (le chef seulement). Tout groupe peut prendre tout mode
--- (choisi avec Josh le 16 novembre 2026 : jouer en solo entre amis sans
--- quitter son groupe) : en partie, un groupe plus grand que l'equipe est
--- coupe en equipes successives (Squads.assignGroups).
-function Lobby.cycleMode(s: State, id: string, modes: { string })
+-- Le mode choisi dans le menu (le chef seulement, un mode connu). Tout
+-- groupe peut prendre tout mode (choisi avec Josh le 16 novembre 2026 :
+-- jouer en solo entre amis sans quitter son groupe) : en partie, un groupe
+-- plus grand que l'equipe est coupe en equipes successives
+-- (Squads.assignGroups). Changer annule le « pret ».
+function Lobby.setMode(s: State, id: string, modes: { string }, mode: string)
 	local g = s.groups[id]
-	if g == nil then
+	if g == nil or table.find(modes, mode) == nil or g.mode == mode then
 		return
 	end
-	g.mode = nextOf(modes, g.mode)
+	g.mode = mode
 	g.ready = false
 end
 
 -- Publique, privee avec bots, privee sans bots (le chef seulement).
-function Lobby.cyclePrivacy(s: State, id: string, privacies: { string })
+function Lobby.setPrivacy(s: State, id: string, privacies: { string }, privacy: string)
 	local g = s.groups[id]
-	if g == nil then
+	if g == nil or table.find(privacies, privacy) == nil or g.privacy == privacy then
 		return
 	end
-	g.privacy = nextOf(privacies, g.privacy)
+	g.privacy = privacy
 	g.ready = false
 end
 

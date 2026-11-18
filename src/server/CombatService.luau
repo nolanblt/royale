@@ -535,6 +535,7 @@ function CombatService.gesture(actor: Roster.Actor, name: string)
 	elseif name == "slide" then
 		if flatSpeed(root) > Mv.runningAbove and ready(actor, "slide", Mv.slideCooldown) then
 			slides[actor] = { untilT = os.clock() + Mv.slideSeconds, hit = {} }
+			actor:SetAttribute(C.slideAttribute, workspace:GetServerTimeNow() + Mv.slideSeconds)
 		end
 	elseif name == "crouch" then
 		actor:SetAttribute(C.crouchAttribute, true)

@@ -107,6 +107,10 @@ Config.controls = {
 			-- (L1 / R1 comme le sac de Roblox a la manette).
 			previousItem = { gamepad = "ButtonL1", keyboard = "Q" },
 			nextItem = { gamepad = "ButtonR1", keyboard = "R" },
+			-- Lacher l'objet tenu devant soi (Josh, le 18 novembre 2026 : on ne
+			-- pouvait pas se debarrasser d'un objet). La croix droite etait
+			-- libre.
+			dropItem = { gamepad = "DPadRight", keyboard = "X" },
 			-- Bascule a la manette (L3 se tient mal en bougeant le stick, vu
 			-- dans Survivor), maintenu au clavier.
 			sprint = { gamepad = "ButtonL3", keyboard = "LeftShift" },
@@ -120,21 +124,28 @@ Config.controls = {
 			-- comme partout sur Roblox).
 			playerList = { gamepad = "ButtonR3", keyboard = "Tab" },
 		},
-		-- Au salon : X maintenu sur quelqu'un l'invite (ou accepte son
-		-- invitation, par l'invite), Y change de mode, R2 se dit pret, B
-		-- quitte son groupe, croix haut invite des amis Roblox.
+		-- Au salon : A se dit pret (Josh, le 18 novembre 2026 : la gachette
+		-- sert a frapper ; au salon, on ne saute donc pas a la manette), Y
+		-- ouvre le menu du mode et de la partie, X maintenu sur quelqu'un
+		-- l'invite (ou accepte son invitation), B quitte son groupe, croix
+		-- haut invite des amis Roblox.
 		lobby = {
-			jump = { gamepad = "ButtonA", keyboard = "Space" },
+			ready = { gamepad = "ButtonA", keyboard = "Return" },
 			invite = { gamepad = "ButtonX", keyboard = "E" },
 			mode = { gamepad = "ButtonY", keyboard = "F" },
-			ready = { gamepad = "ButtonR2", keyboard = "Return" },
 			leaveGroup = { gamepad = "ButtonB", keyboard = "Backspace" },
 			robloxInvite = { gamepad = "DPadUp", keyboard = "I" },
 			playerList = { gamepad = "ButtonR3", keyboard = "Tab" },
 			-- La boutique (avec les tirages, le passe et ses cosmetiques).
 			shop = { gamepad = "DPadLeft", keyboard = "O" },
-			-- Publique, privee avec bots, privee sans bots (Config.lobby.privacies).
-			privacy = { gamepad = "DPadRight", keyboard = "P" },
+		},
+		-- Dans le menu du mode (Y au salon) : la croix choisit la ligne, A la
+		-- prend, B ou Y ferme.
+		modeMenu = {
+			up = { gamepad = "DPadUp", keyboard = "Up" },
+			down = { gamepad = "DPadDown", keyboard = "Down" },
+			pick = { gamepad = "ButtonA", keyboard = "Return" },
+			close = { gamepad = "ButtonB", keyboard = "Backspace" },
 		},
 		-- Dans le panneau de la boutique : on choisit a la croix, on change
 		-- d'onglet avec L1 / R1, A achete ou equipe, B ferme.
@@ -809,12 +820,18 @@ Config.movement = {
 	-- Accroupi, on va lentement et la tete descend : derriere un muret, on
 	-- sort de la ligne de vue de l'Oeil pour de vrai.
 	crouchSpeed = 7,
-	crouchHipDrop = 1.2,
+	-- L'animation accroupie plie deja les jambes : le bassin ne descend que
+	-- de quoi garder les pieds au sol (mesure le 18 novembre 2026 : a 1,2,
+	-- le bas du corps etait 1 stud sous le sol, Josh voyait « des trucs
+	-- bizarres »). La tete descend ainsi de 0,9 stud.
+	crouchHipDrop = 0.2,
 	-- La glissade (B en courant) : un elan qui decroit, la tete basse. Assez
 	-- pour passer sous un camion, pas assez pour battre la course sur une rue.
 	slideSpeed = 34,
 	slideSeconds = 0.8,
-	slideHipDrop = 1.6,
+	-- Glisser : la pose accroupie, figee, les pieds au sol (sans animation,
+	-- le corps s'enfoncait de 1,6 stud debout).
+	slideHipDrop = 0.2,
 	slideCooldown = 1.2,
 	-- Courir, pour le jeu : au-dessus de cette vitesse au sol (studs/s), Y
 	-- plaque au lieu de pousser et B glisse au lieu de s'accroupir. Entre la
@@ -833,7 +850,8 @@ Config.movement = {
 	proneSpeed = 4,
 	-- L'animation couche deja le corps sous le bassin : le bassin descend un
 	-- peu, pas jusqu'au sol (sinon le corps s'enfonce).
-	proneHipDrop = 0.5,
+	-- Mesure : a 0,5, le corps s'enfoncait de 0,25 ; a 0,13 il touche le sol.
+	proneHipDrop = 0.13,
 }
 
 -- Les animations des postures (docs/ASSETS.md), jouees par chaque ecran sur
@@ -1036,6 +1054,8 @@ Config.combat = {
 	crouchAttribute = "Accroupi",
 	-- Allonge (vrai) : on peut le tirer par les pieds.
 	proneAttribute = "Allonge",
+	-- En glissade jusqu'a cette heure du serveur : tous voient la pose.
+	slideAttribute = "Glisse",
 	-- Tirer par les pieds (X maintenu sur quelqu'un d'allonge, CONCEPT.md) :
 	-- en une seconde, il est sorti de `back` studs vers celui qui tire, et
 	-- au sol `fall` s, reveille et a decouvert.
@@ -1088,8 +1108,10 @@ Config.loot = {
 -- dessous de la limite de Roblox (31 contours a la fois), avec de la marge
 -- pour les autres (reveles, coups).
 Config.lootGlow = {
-	radius = 45,
-	max = 12,
+	-- 6 au plus (un contour coute une passe d'affichage de plus : 12
+	-- allumes en permanence pesaient, surtout au telephone).
+	radius = 35,
+	max = 6,
 	refreshSeconds = 0.4,
 	color = { 255, 196, 110 },
 	fillTransparency = 0.88,
@@ -1115,6 +1137,13 @@ Config.bag = {
 	-- L2 ne repart pas avant ce temps (s) : un double appui ne gaspille pas
 	-- deux objets.
 	useCooldown = 0.5,
+	-- Lacher (croix droite) : l'objet tombe a tant de studs devant soi ; au
+	-- doigt, on maintient sa case ce temps (s) pour le lacher.
+	dropAhead = 3,
+	dropHoldSeconds = 0.6,
+	-- Un objet qui arrive dans le sac fait sauter sa case (retour immediat
+	-- de la fouille) : depuis cette taille.
+	newItemPop = 1.35,
 	-- Voler (X maintenu sur un K.O., CONCEPT.md) : le temps de maintien.
 	stealSeconds = 0.8,
 	stealDistance = 7,
@@ -2259,6 +2288,23 @@ Config.lobby = {
 	-- Sur le joueur : la confidentialite de son groupe, et l'heure de depart
 	-- de sa partie privee.
 	privacyAttribute = "Confidentialite",
+	-- Le menu du mode et de la partie (ModeMenu, Y au salon), au centre :
+	-- tailles en pixels, le voile derriere, et sa priorite au-dessus des
+	-- boutons du salon (A y choisit au lieu de se dire pret).
+	modeMenu = {
+		displayOrder = 7,
+		veil = 0.45,
+		width = 440,
+		pad = 20,
+		titleHeight = 48,
+		titleSize = 30,
+		rowHeight = 44,
+		rowSize = 22,
+		sectionSize = 16,
+		gap = 6,
+		footHeight = 28,
+		priorityAbove = 10,
+	},
 	privateDepartAttribute = "DepartPrive",
 	folder = "Salon",
 	colors = {
@@ -4761,6 +4807,31 @@ Config.shop = {
 	-- ce qu'il a et porte, et son passe (JSON).
 	worldAttribute = "BoutiqueJour",
 	playerAttribute = "BoutiqueEtat",
+	-- Le dernier tirage, pour son ouverture a l'ecran (DrawReveal) :
+	-- « id|doublon|heure ».
+	drawAttribute = "DernierTirage",
+	-- L'ouverture : la caisse tremble `shakeSeconds` (jusqu'a `shakeDegrees`),
+	-- l'eclair, puis l'objet en 3D sur des rayons qui tournent ; on peut
+	-- fermer apres `closeAfter` s. Tailles en pixels. Au-dessus de la
+	-- boutique (displayOrder 6).
+	reveal = {
+		displayOrder = 8,
+		veil = 0.25,
+		crateSize = 180,
+		shakeSeconds = 1.4,
+		shakeDegrees = 9,
+		itemSize = 240,
+		rays = 8,
+		rayWidth = 26,
+		raysSize = 620,
+		raysSpeed = 25,
+		raritySize = 20,
+		nameSize = 38,
+		noteSize = 16,
+		closeAfter = 0.6,
+		freshSeconds = 10,
+		priorityAbove = 20,
+	},
 	-- La boutique change a minuit (UTC) : on la republie a ce rythme (s).
 	refreshSeconds = 60,
 	-- L'ecran (pixels) et ses couleurs ; par-dessus tout ; les recompenses
@@ -5098,11 +5169,22 @@ Config.view = {
 	-- droit (chaque panneau monte au meme haut, plus de marches), assez
 	-- haut pour se voir de loin par-dessus les toits ; une ligne de braise
 	-- a son pied.
-	wallSegments = 128,
-	wallHeight = 160,
-	wallColor = { 220, 36, 28 },
-	wallTransparency = 0.15,
-	wallMaterial = "ForceField",
+	-- Refait le 18 novembre 2026 (Josh : « toujours pas tres belle ») : en
+	-- ForceField, on voyait des panneaux separes. Maintenant un mur de
+	-- lumiere rouge qui s'estompe vers le haut, en bandes : jusqu'a `top`
+	-- (part de la hauteur au-dessus du sol le plus haut), de cette
+	-- transparence. Moins de panneaux, plus leger a afficher.
+	wallSegments = 72,
+	wallHeight = 120,
+	wallColor = { 255, 50, 34 },
+	wallBands = {
+		{ top = 0.1, transparency = 0.62 },
+		{ top = 0.4, transparency = 0.8 },
+		{ top = 1, transparency = 0.92 },
+	},
+	-- Les panneaux se touchent a peine : plus, leur recouvrement dessinait
+	-- des rayures plus claires (vu en image).
+	wallOverlap = 0.05,
 	-- Sous le sol, le rideau descend d'autant (un creux ne laisse pas voir
 	-- son bas).
 	wallSink = 40,
@@ -5121,6 +5203,12 @@ Config.view = {
 	warningTint = { 255, 225, 215 },
 	-- La visee de la chute : vitesse du reticule (studs/s) et envois au serveur.
 	aimSpeed = 260,
+	-- La camera de la visee : a cette hauteur au-dessus du reticule et ce
+	-- recul vers le sud (studs), assez pour voir un quartier entier ; elle
+	-- le rejoint a ce rythme (par seconde).
+	aimCameraHeight = 300,
+	aimCameraBack = 160,
+	aimCameraFollow = 8,
 	aimSendSeconds = 0.5,
 	-- Vue de la pupille, les nuages et la brume noient la carte (vu en jeu) :
 	-- le temps de viser, on les ecarte chez soi.
@@ -5165,6 +5253,8 @@ Config.view = {
 	slotGap = 8,
 	slotBottom = 20,
 	slotSelectedStroke = 3,
+	-- L'aide sous le sac (changer d'objet, lacher), en pixels.
+	bagHelpSize = 15,
 	-- La barre ne prend jamais plus que cette part de la largeur de l'ecran.
 	slotFitFraction = 0.95,
 	-- Le trait de visee d'un lancer : des points (studs), un peu transparents.

@@ -1,8 +1,10 @@
 --!strict
 --[[
 	AimView — la visee du depart (CONCEPT.md, Le depart) : pendant la phase
-	`Visee`, on regarde la carte depuis la pupille, et un reticule au sol se
-	deplace au stick gauche (ou aux fleches, ZQSD, WASD). Le point est envoye
+	`Visee`, on regarde la carte d'en haut, et un reticule au sol se deplace
+	a l'un ou l'autre stick (ou aux fleches, ZQSD, WASD). La camera suit le
+	reticule de haut, le nord toujours en haut : depuis la pupille, elle
+	penchait sur le cote des qu'on visait loin (Josh, le 18 novembre 2026). Le point est envoye
 	au serveur deux fois par seconde ; il le ramene dans la carte.
 ]]
 
@@ -45,11 +47,19 @@ function AimView.start()
 	reticle.Size = Vector3.new(1, 24, 24)
 	reticle.Parent = workspace
 
+	-- Les deux sticks visent (le droit, comme on oriente la vue partout).
+	local sticks: { [Enum.KeyCode]: Vector2 } = {}
 	local stick = Vector2.zero
 	UserInputService.InputChanged:Connect(function(input: InputObject)
-		if input.KeyCode == Enum.KeyCode.Thumbstick1 then
+		if
+			input.KeyCode == Enum.KeyCode.Thumbstick1
+			or input.KeyCode == Enum.KeyCode.Thumbstick2
+		then
 			local v = Vector2.new(input.Position.X, -input.Position.Y)
-			stick = if v.Magnitude < V.stickDeadZone then Vector2.zero else v
+			sticks[input.KeyCode] = if v.Magnitude < V.stickDeadZone then Vector2.zero else v
+			local a = sticks[Enum.KeyCode.Thumbstick1] or Vector2.zero
+			local b = sticks[Enum.KeyCode.Thumbstick2] or Vector2.zero
+			stick = if b.Magnitude > a.Magnitude then b else a
 		end
 	end)
 
@@ -149,10 +159,12 @@ function AimView.start()
 			reticle.CFrame = CFrame.new(ground + Vector3.new(0, 0.5, 0))
 				* CFrame.Angles(0, 0, math.pi / 2)
 
-			-- La camera, juste sous la pupille, tournee vers le reticule.
+			-- La camera au-dessus du reticule, un peu au sud, le nord en haut :
+			-- elle ne penche jamais.
 			camera.CameraType = Enum.CameraType.Scriptable
-			local from = SkyView.eyeOrigin - Vector3.new(0, 10, 0)
-			camera.CFrame = CFrame.lookAt(from, ground, Vector3.new(0, 0, -1))
+			local from = ground + Vector3.new(0, V.aimCameraHeight, V.aimCameraBack)
+			local want = CFrame.lookAt(from, ground)
+			camera.CFrame = camera.CFrame:Lerp(want, math.clamp(dt * V.aimCameraFollow, 0, 1))
 
 			local now = os.clock()
 			if now - lastSend >= V.aimSendSeconds then

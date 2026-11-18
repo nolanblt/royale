@@ -783,6 +783,21 @@ local function useItem(actor: Roster.Actor, look: Vector3?): boolean
 	return done
 end
 
+-- Lacher l'objet tenu : il tombe devant soi, et se ramasse (X maintenu).
+function ItemService.drop(actor: Roster.Actor)
+	local slot = selected[actor] or BG.hands
+	local id = bagOf(actor)[slot]
+	local root = Roster.rootOf(actor)
+	if id == nil or id == "" or root == nil or not free(actor) or HidingService.isHidden(actor) then
+		return
+	end
+	bags[actor] = (Bag.take(bagOf(actor), slot))
+	publish(actor)
+	local look = root.CFrame.LookVector
+	dropOnGround(id, root.Position + Vector3.new(look.X, 0, look.Z) * BG.dropAhead)
+	notify(actor, "Tu lâches : " .. I[id].name)
+end
+
 -- Le chemin du remote, des bots et des sondes.
 function ItemService.use(actor: Roster.Actor, look: Vector3?): boolean
 	return useItem(actor, look)
@@ -1293,6 +1308,8 @@ function ItemService.start(
 				ItemService.select(player, Bag.cycle(selected[player] or BG.hands, arg, BG.slots))
 			elseif action == "use" then
 				useItem(player, if typeof(arg) == "Vector3" then arg else nil)
+			elseif action == "drop" then
+				ItemService.drop(player)
 			end
 		end)
 	)

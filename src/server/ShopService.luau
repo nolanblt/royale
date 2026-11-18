@@ -111,7 +111,17 @@ local function watchTrails()
 				and root:IsA("BasePart")
 				and Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude
 					> CO.trail.movingSpeed
-			local on = moving and player:GetAttribute(Config.hiding.hiddenAttribute) == nil
+			-- En partie, seulement en courant (Josh, le 18 novembre 2026 : une
+			-- trainee « constamment » derriere soi trahit qui se faufile) ;
+			-- au salon, des qu'on bouge, pour la montrer.
+			local inMatch = player:GetAttribute(Config.match.aliveAttribute) == true
+			local fast = root ~= nil
+				and root:IsA("BasePart")
+				and Vector3.new(root.AssemblyLinearVelocity.X, 0, root.AssemblyLinearVelocity.Z).Magnitude
+					> Config.movement.runningAbove
+			local on = moving
+				and player:GetAttribute(Config.hiding.hiddenAttribute) == nil
+				and (not inMatch or fast)
 			for _, e in trail.emitters do
 				e.Enabled = on
 			end
@@ -262,9 +272,18 @@ local function draw(player: Player, d: any, withCredits: boolean)
 		end
 		d.fragments -= cost
 	end
-	notify(
-		player,
-		"Tirage : " .. give(d, Shop.draw(items, pool, SH.drawWeights, random:NextNumber()))
+	local id = Shop.draw(items, pool, SH.drawWeights, random:NextNumber())
+	local duplicate = d.owned[id] == true
+	notify(player, "Tirage : " .. give(d, id))
+	-- L'ouverture a l'ecran (DrawReveal) : l'objet, doublon ou non, et quand.
+	player:SetAttribute(
+		SH.drawAttribute,
+		string.format(
+			"%s|%d|%s",
+			id,
+			if duplicate then 1 else 0,
+			tostring(workspace:GetServerTimeNow())
+		)
 	)
 end
 

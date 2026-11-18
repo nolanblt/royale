@@ -36,9 +36,12 @@ local function tracksOf(humanoid: Humanoid): Tracks?
 		return nil
 	end
 	local out: Tracks = {}
-	for _, name in { "prone", "crouch", "knockedOut", "carried" } do
+	for _, name in { "prone", "crouch", "knockedOut", "carried", "slide" } do
 		local animation = Instance.new("Animation")
-		animation.AnimationId = "rbxassetid://" .. (P :: any)[name]
+		-- La glissade reprend la pose accroupie, figee (une animation de
+		-- glissade generee restait debout : vu a la mesure).
+		animation.AnimationId = "rbxassetid://"
+			.. (P :: any)[if name == "slide" then "crouch" else name]
 		local ok, track = pcall(function()
 			return animator:LoadAnimation(animation)
 		end)
@@ -68,6 +71,11 @@ local function postureOf(actor: Instance): string?
 		return "carried"
 	elseif typeof(down) == "number" and workspace:GetServerTimeNow() < down then
 		return "knockedOut"
+	elseif
+		typeof(actor:GetAttribute(C.slideAttribute)) == "number"
+		and workspace:GetServerTimeNow() < actor:GetAttribute(C.slideAttribute)
+	then
+		return "slide"
 	elseif actor:GetAttribute(C.proneAttribute) == true then
 		return "prone"
 	elseif actor:GetAttribute(C.crouchAttribute) == true then
@@ -96,6 +104,9 @@ local function update(actor: Instance, character: Model)
 			tracks[want]:Play(P.fadeSeconds)
 		end
 		playing[humanoid] = want
+	end
+	if want == "slide" and tracks.slide then
+		tracks.slide:AdjustSpeed(0)
 	end
 	-- Accroupi et ramper : la boucle avance quand on bouge, se fige sinon.
 	if want == "crouch" or want == "prone" then

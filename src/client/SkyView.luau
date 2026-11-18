@@ -28,6 +28,9 @@ local function rgb(c: { number }): Color3
 end
 local W = Config.world
 
+-- Les points du bord du faisceau ou l'on cherche le plus haut obstacle.
+local RIM = { { 0.6, 0 }, { -0.6, 0 }, { 0, 0.6 }, { 0, -0.6 } }
+
 -- Le bout de la pupille, mesure comme cote serveur (le modele n'a pas encore
 -- tourne quand on le lit).
 SkyView.eyeOrigin = Vector3.zero
@@ -140,11 +143,15 @@ function SkyView.start()
 		light.Brightness = V.spotBrightness
 		light.Range = V.spotRange
 		light.Angle = V.spotAngle
+		-- Avec ombres : sans elles, la lumiere traversait les toits et
+		-- eclairait l'interieur des maisons (vu par Josh).
+		light.Shadows = true
 		light.Parent = spot
 		return { shaft = shaft, spot = spot, x = 0, z = 0, foot = Vector3.zero, radius = 0 }
 	end
 
 	local lidAmount = 1
+	local lidShown = -1
 	local look = down
 	local pulseCracks = Cracks.track(sky)
 	RunService.RenderStepped:Connect(function(dt: number)
@@ -172,18 +179,32 @@ function SkyView.start()
 			d.x += (value.X - d.x) * k
 			d.z += (value.Z - d.z) * k
 			local radius = value.Y
-			local hit = workspace:Raycast(
-				Vector3.new(d.x, SkyView.eyeOrigin.Y - 5, d.z),
-				Vector3.new(0, -SkyView.eyeOrigin.Y - 200, 0),
-				rayParams
-			)
-			local groundY = if hit then hit.Position.Y else 0
-			local foot = Vector3.new(d.x, groundY, d.z)
+			-- Le faisceau s'arrete sur ce qu'il touche de plus haut sous lui
+			-- (le centre et quatre points du bord) : sur un toit en pente, il
+			-- ne rentre plus dans la maison.
+			local fall = Vector3.new(0, -SkyView.eyeOrigin.Y - 200, 0)
+			local below =
+				workspace:Raycast(Vector3.new(d.x, SkyView.eyeOrigin.Y - 5, d.z), fall, rayParams)
+			local topY = if below then below.Position.Y else 0
+			for _, o in RIM do
+				local h = workspace:Raycast(
+					Vector3.new(d.x + o[1] * radius, SkyView.eyeOrigin.Y - 5, d.z + o[2] * radius),
+					fall,
+					rayParams
+				)
+				if h and h.Position.Y > topY then
+					topY = h.Position.Y
+				end
+			end
+			local foot = Vector3.new(d.x, topY, d.z)
 			d.foot = foot
 			d.radius = radius
+			-- La tache epouse la surface du centre (couchee sur la pente du
+			-- toit, pas a plat au travers).
+			local normal = if below then below.Normal else Vector3.yAxis
+			local at = (if below then below.Position else foot) + normal * 0.2
 			d.spot.Size = Vector3.new(0.3, radius * 2, radius * 2)
-			d.spot.CFrame = CFrame.new(foot + Vector3.new(0, 0.2, 0))
-				* CFrame.Angles(0, 0, math.pi / 2)
+			d.spot.CFrame = CFrame.lookAt(at, at + normal) * CFrame.Angles(0, math.pi / 2, 0)
 			if me and me:IsA("BasePart") then
 				if
 					nearest == nil
@@ -242,9 +263,14 @@ function SkyView.start()
 		elseif lidAmount > target then
 			lidAmount = math.max(lidAmount - step, target)
 		end
-		for _, lid in lids do
-			local angle = lid.closed + (lid.open - lid.closed) * lidAmount
-			lid.model:PivotTo(lid.base * CFrame.Angles(math.rad(angle - lid.open), 0, 0))
+		-- Seulement quand elles bougent : elles font un millier de pieces, et
+		-- les poser a chaque image coutait 3,5 ms (mesure le 18 novembre).
+		if lidAmount ~= lidShown then
+			lidShown = lidAmount
+			for _, lid in lids do
+				local angle = lid.closed + (lid.open - lid.closed) * lidAmount
+				lid.model:PivotTo(lid.base * CFrame.Angles(math.rad(angle - lid.open), 0, 0))
+			end
 		end
 
 		local hide = math.clamp(1 - lidAmount / V.irisShowAt, 0, 1)

@@ -18,6 +18,7 @@ local Config = require(Royale:WaitForChild("Config"))
 local Lang = require(Royale:WaitForChild("Lang"))
 
 local ButtonIcons = require(script.Parent.ButtonIcons)
+local ModeMenu = require(script.Parent.ModeMenu)
 local ShopView = require(script.Parent.ShopView)
 local InputBus = require(script.Parent.InputBus)
 
@@ -391,12 +392,9 @@ function LobbyView.start()
 			Enum.KeyCode[binding.keyboard]
 		)
 	end
+	-- Y : le menu du mode et de la partie, au centre (ModeMenu).
 	bind("RoyaleSalonMode", K.mode, function()
-		remote:FireServer("mode")
-		return true
-	end)
-	bind("RoyaleSalonPrivee", K.privacy, function()
-		remote:FireServer("privacy")
+		ModeMenu.toggle()
 		return true
 	end)
 	bind("RoyaleSalonPret", K.ready, function()
@@ -489,8 +487,7 @@ function LobbyView.start()
 				text = if ready then "Annuler" else "Prêt",
 				action = "RoyaleSalonPret",
 			},
-			{ binding = K.mode, text = "Mode", action = "RoyaleSalonMode" },
-			{ binding = K.privacy, text = "Publique / privée", action = "RoyaleSalonPrivee" },
+			{ binding = K.mode, text = "Mode et partie", action = "RoyaleSalonMode" },
 			-- Inviter se fait sur l'invite au-dessus d'un joueur (on la touche).
 			{
 				binding = K.invite,

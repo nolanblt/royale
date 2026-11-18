@@ -247,7 +247,10 @@ function Hud.start()
 		elseif phase == "Visee" then
 			text = if ButtonIcons.touch()
 				then "Choisis où l'Œil te crache\nglisse le doigt pour viser"
-				else "Choisis où l'Œil te crache\nstick gauche pour viser"
+				elseif
+					ButtonIcons.gamepad()
+				then "Choisis où l'Œil te crache\nun stick pour viser"
+				else "Choisis où l'Œil te crache\nZQSD ou flèches pour viser"
 		elseif phase == "Fin" then
 			local winner = workspace:GetAttribute(M.winnerAttribute)
 			text = if typeof(winner) == "string" and winner ~= ""

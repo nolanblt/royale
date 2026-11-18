@@ -1106,3 +1106,46 @@ suspendu flotte exprès : à trancher avec Josh.
 - **Décidé par Josh (16 novembre 2026) : le Quartier suspendu reste comme
   il est**, ses îlots flottent exprès. (Seule la voiture d'un îlot, qui
   flottait au-dessus de lui, a été reposée.)
+
+## Le deuxième retour de Josh (18 novembre 2026)
+
+Demandé par Josh après une partie. Fait :
+
+- **Salon** : A se dit prêt (la gâchette sert à frapper) ; Y ouvre un menu
+  au centre de l'écran (`ModeMenu`) : mode (solo, duo, escouade) et partie
+  (publique, privée avec ou sans bots), la croix choisit, A prend, B ferme.
+  `Lobby.setMode` / `setPrivacy` remplacent les choix en boucle. La croix
+  droite du salon est libre.
+- **Ouverture des tirages** (`DrawReveal`) : caisse qui tremble à la couleur
+  de la rareté, éclair, l'objet en 3D sur des rayons, son nom et sa rareté.
+- **Visée du départ** : les deux sticks visent ; la caméra suit le viseur
+  d'en haut, le nord en haut, elle ne penche plus (avant : depuis la
+  pupille, de travers dès qu'on visait loin).
+- **Objets** : l'aide sous le sac dit L1 / R1 pour changer d'objet ;
+  **lâcher** l'objet tenu ajouté (croix droite, X au clavier, maintenir sa
+  case au doigt) ; la case d'un objet qui arrive saute (retour immédiat de
+  la fouille : le serveur donnait déjà l'objet sans attendre, la seconde
+  venait du réseau sans rien à l'écran).
+- **Postures** : accroupi et allongé, le corps s'enfonçait dans le sol
+  (l'animation pliait déjà les jambes ET le bassin descendait : mesuré à
+  1 stud et 0,25 stud sous le sol) ; abaissements recalculés (0,2 et 0,13)
+  pour garder les pieds au sol. La glissade n'avait aucune animation (le
+  corps s'enfonçait debout de 1,6 stud) : la pose accroupie, figée, vue de
+  tous (attribut `Glisse`). Une animation de glissade générée
+  (`101438636664122`) restait debout : pas gardée. Conséquence : accroupi,
+  la tête descend de 0,9 stud au lieu de 1,9 (un muret bas couvre moins).
+- **Traînée cosmétique** : en partie seulement en courant (au salon dès
+  qu'on bouge) ; elle suivait partout et trahissait qui se faufile.
+- **Faisceau de l'Œil** : il s'arrête sur ce qu'il touche de plus haut, sa
+  tache épouse la pente du toit, sa lumière a des ombres (elle éclairait
+  l'intérieur des maisons).
+- **Mur de zone** : la vraie cause des « piquets », depuis la première
+  version : chaque panneau était tourné d'un quart de tour, posé en travers
+  du cercle. Corrigé (et le rideau du Ventre, même défaut). Le mur est un
+  rideau rouge en trois bandes qui s'estompent vers le haut.
+- **Lag** : mesuré, le serveur tient 60 pas/s à 24 en partie et les scripts
+  du client coûtent moins d'1 ms par image ; Studio bride son affichage,
+  impossible d'y mesurer la carte graphique. Allégé ce qui pèse à
+  l'affichage : 6 contours de meubles au lieu de 12, plus d'ombres aux
+  bougies, lanternes et lampes d'égout, mur de zone en 72 panneaux au lieu
+  de 128, les paupières de l'Œil ne se recalculent plus à chaque image.

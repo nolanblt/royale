@@ -324,7 +324,9 @@ function GoulagService.build()
 		local panel = part(
 			"Rideau",
 			Vector3.new(0.4, S.curtainHeight, (p1 - p0).Magnitude + 0.1),
-			CFrame.lookAt(mid, mid + (p1 - p0)) * CFrame.Angles(0, math.pi / 2, 0),
+			-- La longueur suit le cercle (un quart de tour de trop les mettait
+			-- en travers, des colonnes separees au lieu d'un rideau).
+			CFrame.lookAt(mid, mid + (p1 - p0)),
 			rim,
 			Enum.Material.ForceField
 		)

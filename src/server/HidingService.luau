@@ -279,7 +279,8 @@ local function buildSewerRoom(cover: BasePart, folder: Instance): CFrame
 	glow.Color = rgb(S.lamp)
 	glow.Range = S.lampRange
 	glow.Brightness = S.lampBrightness
-	glow.Shadows = true
+	-- Sans ombres : 30 lampes d'egout avec ombres pesaient sur l'affichage.
+	glow.Shadows = false
 	glow.Parent = lamp
 	-- Des gouttes qui tombent du plafond dans l'eau.
 	local drips = Instance.new("ParticleEmitter")

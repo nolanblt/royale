@@ -994,3 +994,28 @@ chez le joueur, avant 0), photo de la Fosse et d'un duel contre le Repris
 6. **Les textures de la carte** dans le jeu publié (routes, murs) : 16
    avertissements « pas la permission » au démarrage dans Studio concernent
    les matières générées. Si les routes sont lisses et grises en jeu, dis-le.
+
+## Le deuxième retour (18 novembre 2026)
+
+Vu en partie lancée depuis Studio, avec de vraies touches : le menu Y (mode
+choisi à la croix + A, sans déclencher « Prêt »), A pour se dire prêt,
+l'ouverture d'un tirage, la visée (la carte se voit dès le début), accroupi
+et allongé (pieds au sol, mesuré), l'aide sous le sac, le nouveau mur de
+zone. **Pas vu** : la glissade en vrai (Studio ne fait pas courir), lâcher
+un objet, le faisceau sur un toit, et le lag sur ton appareil.
+
+1. **Le lag** : sur quel appareil ça ramait (téléphone, PC) ? Est-ce mieux ?
+   Si ça rame encore, dis à quel moment (salon, partie, beaucoup de monde).
+2. **Le salon** : A pour « Prêt », Y pour le menu au centre ; on voit bien
+   ce qu'on choisit ?
+3. **Un tirage** : l'ouverture (caisse, éclair, objet) te plaît ?
+4. **La visée** : stick droit ou gauche, la vue reste droite ?
+5. **Les objets** : L1 / R1 changent bien d'objet ; croix droite lâche
+   l'objet tenu ; la case saute quand tu ramasses.
+6. **Les postures** : accroupi, allongé, glissade en courant. Plus de
+   jambes dans le sol ? La glissade se voit (pose accroupie qui file) ?
+7. **La traînée** : seulement quand tu cours, en partie.
+8. **Le faisceau sur un toit** : il s'arrête dessus, plus de boule de
+   lumière dans la maison ?
+9. **Le mur de zone** : un rideau rouge qui s'estompe vers le haut, plus
+   de piquets ?

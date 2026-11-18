@@ -80,16 +80,27 @@ local function hide(parts: { Part })
 	end
 end
 
--- Le rideau : du sous-sol au meme sommet pour tous.
-local function placeWall(parts: { Part }, points: { Vector3 }, top: number)
+-- Une bande du mur, de `fromY` (nil : depuis le sous-sol de chaque point)
+-- a `toY`, au meme sommet pour tous.
+local function placeBand(
+	parts: { Part },
+	points: { Vector3 },
+	fromY: number?,
+	toY: number,
+	transparency: number
+)
 	for i, p in parts do
 		local p0, p1 = points[i], points[i + 1]
-		local base = math.min(p0.Y, p1.Y) - V.wallSink
-		local mid = Vector3.new((p0.X + p1.X) / 2, (base + top) / 2, (p0.Z + p1.Z) / 2)
+		local base = fromY or (math.min(p0.Y, p1.Y) - V.wallSink)
+		local mid = Vector3.new((p0.X + p1.X) / 2, (base + toY) / 2, (p0.Z + p1.Z) / 2)
 		local along = Vector3.new(p1.X - p0.X, 0, p1.Z - p0.Z)
-		p.Size = Vector3.new(0.4, top - base, along.Magnitude + 0.2)
-		p.CFrame = CFrame.lookAt(mid, mid + along) * CFrame.Angles(0, math.pi / 2, 0)
-		p.Transparency = V.wallTransparency
+		-- Les panneaux se chevauchent un peu : sans joints visibles.
+		p.Size = Vector3.new(0.3, toY - base, along.Magnitude + V.wallOverlap)
+		-- La longueur (Z) suit le cercle. Un quart de tour de trop, present
+		-- depuis la premiere version, couchait chaque panneau en travers du
+		-- cercle : de profil, des « piquets » (vu en image le 18 novembre).
+		p.CFrame = CFrame.lookAt(mid, mid + along)
+		p.Transparency = transparency
 	end
 end
 
@@ -109,8 +120,11 @@ function ZoneView.start()
 	local folder = Instance.new("Folder")
 	folder.Name = "RoyaleCercleVu"
 	folder.Parent = workspace
-	local wall =
-		ring(folder, rgb(V.wallColor), V.wallTransparency, (Enum.Material :: any)[V.wallMaterial])
+	-- Le mur : des bandes de plus en plus transparentes vers le haut.
+	local bands: { { Part } } = {}
+	for _ in V.wallBands do
+		table.insert(bands, ring(folder, rgb(V.wallColor), 1, Enum.Material.Neon))
+	end
 	local wallBase = ring(folder, rgb(V.wallBaseColor), V.wallBaseTransparency, Enum.Material.Neon)
 	local nextRing = ring(folder, rgb(V.nextColor), V.nextTransparency, Enum.Material.Neon)
 	rayParams.FilterDescendantsInstances = { folder }
@@ -126,10 +140,17 @@ function ZoneView.start()
 		end
 		if c then
 			local points, highest = samples(c, V.wallSegments)
-			placeWall(wall, points, highest + V.wallHeight)
+			local from: number? = nil
+			for k, band in V.wallBands do
+				local toY = highest + V.wallHeight * band.top
+				placeBand(bands[k], points, from, toY, band.transparency)
+				from = toY
+			end
 			placeLine(wallBase, points, V.wallBaseWidth, V.wallBaseTransparency)
 		else
-			hide(wall)
+			for _, parts in bands do
+				hide(parts)
+			end
 			hide(wallBase)
 		end
 		if n then

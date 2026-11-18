@@ -1120,7 +1120,7 @@ local function accept(player: Player)
 	publish()
 end
 
-local function action(player: Player, name: any)
+local function action(player: Player, name: any, arg: any)
 	if away[player] or typeof(name) ~= "string" then
 		return
 	end
@@ -1130,10 +1130,10 @@ local function action(player: Player, name: any)
 		return
 	elseif name == "leave" then
 		Lobby.leave(state, id, true)
-	elseif name == "mode" then
-		Lobby.cycleMode(state, id, LB.modes)
-	elseif name == "privacy" then
-		Lobby.cyclePrivacy(state, id, LB.privacies)
+	elseif name == "mode" and typeof(arg) == "string" then
+		Lobby.setMode(state, id, LB.modes, arg)
+	elseif name == "privacy" and typeof(arg) == "string" then
+		Lobby.setPrivacy(state, id, LB.privacies, arg)
 	elseif name == "ready" then
 		local g = state.groups[state.groupOf[id] or ""]
 		Lobby.setReady(state, id, not (g and g.ready))

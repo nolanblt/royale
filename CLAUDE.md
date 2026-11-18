@@ -20,6 +20,21 @@ Les notes communes à tous les jeux de Josh sont dans
 
 ## Reprendre ici (nouveau chat) — état au 18 novembre 2026
 
+**Dernière session (18 novembre)** : deuxième retour de Josh traité (salon A
++ menu Y `ModeMenu`, ouverture des tirages `DrawReveal`, visée aux deux
+sticks, lâcher un objet, postures sans jambes dans le sol, glissade en pose
+accroupie, traînée à la course, faisceau arrêté sur les toits, mur de zone
+enfin juste : les panneaux étaient tournés d'un quart de tour depuis le
+début). Détail : `docs/DECISIONS.md` « Le deuxième retour ». Le lag n'a pas
+pu être reproduit (Studio bride son affichage) : demander à Josh sur quel
+appareil.
+
+**Pour jouer depuis le pont** : `user_keyboard_input` envoie de vraies
+touches (boutons de manette compris) au client en partie ; le personnage
+ne marche pas (pas de PlayerModule) mais les commandes du jeu répondent.
+Le `cd` d'une commande qui échoue fait tourner la suite dans un autre
+dossier : écrire `cd ... || exit 1`.
+
 **Le jeu est fini et en phase de test, pas encore public.** Dernier commit :
 « La grande refonte après la première partie de Josh » (poussé sur `main`).
 
