@@ -63,8 +63,11 @@ return function(t: harness.Harness)
 	)
 	same(
 		"l'objet choisi, ce qu'il fait et son bouton",
-		Config.items.smoke.name .. " — " .. Config.items.smoke.blurb .. " · L2 maintenu : lancer",
-		"Smoke Bomb — a cloud it can't see through · hold L2: throw"
+		Config.items.smoke.name
+			.. " — "
+			.. Config.items.smoke.blurb
+			.. " · R2 lancer · L2 viser",
+		"Smoke Bomb — a cloud it can't see through · R2 throw · L2 aim"
 	)
 	same(
 		"un nouveau pouvoir sur deux lignes",

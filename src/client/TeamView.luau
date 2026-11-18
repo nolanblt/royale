@@ -15,6 +15,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 
+local ButtonIcons = require(script.Parent.ButtonIcons)
+
 local TeamView = {}
 
 local SQ = Config.squads
@@ -63,9 +65,15 @@ local function stateOf(actor: Instance): string
 	elseif actor:GetAttribute(Config.match.aliveAttribute) ~= true then
 		return "aspiré"
 	elseif actor:GetAttribute(SQ.cocoonAttribute) == true then
-		return "dans un cocon — 3 coups (R2) pour l'ouvrir"
+		return string.format(
+			"dans un cocon — 3 coups (%s) pour l'ouvrir",
+			ButtonIcons.name(Config.controls.contexts.onFoot.hit)
+		)
 	elseif actor:GetAttribute(Config.combat.koAttribute) == true then
-		return "K.O. — X maintenu pour le relever"
+		return string.format(
+			"K.O. — %s maintenu pour le relever",
+			ButtonIcons.name(Config.controls.contexts.onFoot.interact)
+		)
 	elseif typeof(actor:GetAttribute(Config.hiding.hiddenAttribute)) == "string" then
 		return "caché"
 	end

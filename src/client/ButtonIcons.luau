@@ -31,6 +31,23 @@ function ButtonIcons.gamepad(): boolean
 	return UserInputService.GamepadEnabled
 end
 
+-- Le nom d'une commande dans un texte, selon ce qu'on tient : le bouton de
+-- la manette (« R2 », « X », « Croix haut »), sinon la touche du clavier ou
+-- de la souris (« E », « Clic gauche »). Avant, les textes disaient « R2 »
+-- meme a qui jouait au clavier.
+local PAD_NAMES = {
+	DPadUp = "Croix haut",
+	DPadDown = "Croix bas",
+	DPadLeft = "Croix gauche",
+	DPadRight = "Croix droite",
+}
+function ButtonIcons.name(binding: { gamepad: string, keyboard: string }): string
+	if ButtonIcons.gamepad() then
+		return PAD_NAMES[binding.gamepad] or (string.gsub(binding.gamepad, "^Button", ""))
+	end
+	return Config.view.keyNames[binding.keyboard] or binding.keyboard
+end
+
 -- Au doigt seulement (telephone, tablette, rien d'autre de touche en
 -- dernier) : pas d'icone de bouton, qui ne voudrait rien dire ; les boutons
 -- tactiles et les textes le lisent.

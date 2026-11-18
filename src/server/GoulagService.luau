@@ -42,14 +42,14 @@ type Duel = {
 	bot: Model?,
 	platform: BasePart,
 	rim: BasePart,
+	spot: SpotLight?,
 	center: Vector3,
 	started: number,
 	over: boolean,
 }
 
-local folder: Folder? = nil
-local platforms: { { top: BasePart, rim: BasePart, center: Vector3 } } = {}
-local cages: { Vector3 } = {}
+local folder: Instance? = nil
+local platforms: { { top: BasePart, rim: BasePart, center: Vector3, spot: SpotLight } } = {}
 -- Ceux qui sont au Ventre (en cage ou en duel), dans l'ordre d'arrivee.
 local queue: { Roster.Actor } = {}
 local fighting: { [Roster.Actor]: Duel } = {}
@@ -84,21 +84,83 @@ local function part(
 	return p
 end
 
--- Le Ventre : des plateformes de pierre sombre au bord rougeoyant, en cercle
--- autour d'un pilier de cages, dans le noir et les braises. Public pour le
--- regarder en mode edition (puis l'effacer : il n'appartient pas a la place).
+-- Le Ventre (refait le 16 novembre 2026 : Josh ne comprenait pas ou il
+-- arrivait, « un truc sombre, on peut a peine bouger, des murs
+-- invisibles », et ne voyait pas son adversaire). Au centre, la Fosse : une
+-- grande plateforme ronde ou l'on attend libre de ses mouvements, fermee
+-- par un rideau d'energie qu'on VOIT (plus de cage etroite aux murs
+-- invisibles), eclairee de braseros. Autour, les plateformes de duel,
+-- toujours visibles, qui s'embrasent quand on s'y bat. Tout le Ventre est
+-- envoye d'un coup a chaque joueur (Persistent) : avant, le streaming de
+-- Roblox le livrait par morceaux, on arrivait dans le noir.
+-- Public pour le regarder en mode edition (puis l'effacer).
 function GoulagService.build()
 	local old = workspace:FindFirstChild(G.folder)
 	if old then
 		old:Destroy()
 	end
-	local f = Instance.new("Folder")
+	local f = Instance.new("Model")
 	f.Name = G.folder
+	f.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
 	f.Parent = workspace
 	World.ignore(f)
 	folder = f
-	local stone, rim, cage = rgb(G.colors.stone), rgb(G.colors.rim), rgb(G.colors.cage)
+	local V = G.look
+	local stone, rim, ember = rgb(G.colors.stone), rgb(G.colors.rim), rgb(G.colors.ember)
 	local flat = CFrame.Angles(0, 0, math.pi / 2)
+
+	local function light(
+		parent: Instance,
+		kind: string,
+		color: Color3,
+		range: number,
+		brightness: number
+	): Light
+		local l = Instance.new(kind) :: Light
+		l.Color = color
+		l.Brightness = brightness;
+		(l :: any).Range = range
+		l.Shadows = false
+		l.Parent = parent
+		return l
+	end
+
+	local function brazier(at: Vector3, scale: number)
+		local bowl = part(
+			"Brasero",
+			Vector3.new(1.2, 3, 3) * scale,
+			CFrame.new(at + Vector3.new(0, 3.4 * scale, 0)) * flat,
+			rgb(G.colors.iron),
+			Enum.Material.Metal
+		)
+		bowl.Shape = Enum.PartType.Cylinder
+		local foot = part(
+			"Pied",
+			Vector3.new(0.6, 3.4, 0.6) * scale,
+			CFrame.new(at + Vector3.new(0, 1.7 * scale, 0)),
+			rgb(G.colors.iron),
+			Enum.Material.Metal
+		)
+		foot.CanCollide = true
+		local coals = part(
+			"Braises",
+			Vector3.new(0.4, 2.6, 2.6) * scale,
+			CFrame.new(at + Vector3.new(0, 4 * scale, 0)) * flat,
+			ember,
+			Enum.Material.Neon
+		)
+		coals.Shape = Enum.PartType.Cylinder
+		coals.CanCollide = false
+		local fire = Instance.new("Fire")
+		fire.Color = ember
+		fire.SecondaryColor = rim
+		fire.Size = 5 * scale
+		fire.Heat = 9
+		fire.Parent = coals
+		light(coals, "PointLight", ember, V.brazierRange * scale, V.brazierBrightness)
+	end
+
+	-- Les plateformes de duel, en cercle autour de la Fosse.
 	for i = 1, G.platforms do
 		local a = (i - 1) / G.platforms * math.pi * 2
 		local center = ORIGIN
@@ -121,28 +183,42 @@ function GoulagService.build()
 		)
 		edge.Shape = Enum.PartType.Cylinder
 		edge.CanCollide = false
-		local light = Instance.new("PointLight")
-		light.Color = rim
-		light.Range = 24
-		light.Brightness = 2
-		light.Parent = edge
+		local glow = light(edge, "PointLight", rim, V.rimRange, V.rimBrightness)
 		local embers = Instance.new("ParticleEmitter")
-		embers.Color = ColorSequence.new(rgb(G.colors.ember))
+		embers.Color = ColorSequence.new(ember)
 		embers.LightEmission = 1
-		embers.Rate = 6
+		embers.Rate = 10
 		embers.Lifetime = NumberRange.new(2, 4)
-		embers.Speed = NumberRange.new(2, 5)
+		embers.Speed = NumberRange.new(2, 6)
 		embers.SpreadAngle = Vector2.new(180, 180)
-		embers.Size = NumberSequence.new(0.3, 0)
+		embers.Size = NumberSequence.new(0.35, 0)
 		embers.Parent = edge
-		-- Toutes les plateformes sont cachees hors des duels.
-		top.Transparency = 1
+		-- Un projecteur au-dessus : le duel se voit de la Fosse, et les deux
+		-- combattants se voient l'un l'autre (avant : le noir).
+		local lamp = part(
+			"Projecteur" .. i,
+			Vector3.one,
+			CFrame.new(center + Vector3.new(0, V.spotHeight, 0)),
+			rim,
+			Enum.Material.Neon
+		)
+		lamp.Transparency = 1
+		lamp.CanCollide = false
+		lamp.CanQuery = false
+		local spot =
+			light(lamp, "SpotLight", rgb(G.colors.spot), V.spotHeight + 20, V.spotBrightness) :: any
+		spot.Face = Enum.NormalId.Bottom
+		spot.Angle = V.spotAngle
+		-- Au repos : une pierre sombre a la braise eteinte, qu'on ne foule pas.
+		top.Transparency = V.idleTransparency
 		top.CanCollide = false
-		edge.Transparency = 1
-		light.Enabled = false
+		edge.Transparency = V.idleTransparency
+		glow.Brightness = V.idleRimBrightness
 		embers.Enabled = false
-		table.insert(platforms, { top = top, rim = edge, center = center })
+		spot.Enabled = false
+		table.insert(platforms, { top = top, rim = edge, center = center, spot = spot })
 	end
+
 	-- La salle : six parois de chair sombre, veinees de braise. On ne doit
 	-- voir ni la carte ni le ciel (vu en image : la carte flottait au loin).
 	local wall = rgb(G.colors.wall)
@@ -185,7 +261,7 @@ function GoulagService.build()
 			else Vector3.new(along, y, -h + 2.2)
 		local vein = part(
 			"Veine",
-			Vector3.new(0.35, random:NextNumber(30, 90), 0.35),
+			Vector3.new(0.6, random:NextNumber(30, 90), 0.6),
 			CFrame.new(ORIGIN + pos) * CFrame.Angles(0, 0, random:NextNumber(-0.6, 0.6)),
 			rgb(G.colors.vein),
 			Enum.Material.Neon
@@ -193,63 +269,116 @@ function GoulagService.build()
 		vein.CanCollide = false
 		vein.CanQuery = false
 	end
+	-- Une lueur rouge qui baigne toute la salle, de haut : on y voit.
+	for k = 1, V.fillLights do
+		local a = (k - 1) / V.fillLights * math.pi * 2
+		local holder = part(
+			"Lueur",
+			Vector3.one,
+			CFrame.new(
+				ORIGIN + Vector3.new(math.cos(a) * h * 0.5, above * 0.6, math.sin(a) * h * 0.5)
+			),
+			rim,
+			Enum.Material.Neon
+		)
+		holder.Transparency = 1
+		holder.CanCollide = false
+		holder.CanQuery = false
+		light(holder, "PointLight", rgb(G.colors.fill), V.fillRange, V.fillBrightness)
+	end
 
-	-- Le pilier des cages, au centre.
-	local across = G.cageRadius * 2 + G.cageSize * 2
-	local pillar = part(
-		"Pilier",
-		Vector3.new(4, across, across),
+	-- La Fosse, au centre : on y arrive, on y marche, on regarde les duels.
+	local S = G.stand
+	local floor = part(
+		"Fosse",
+		Vector3.new(4, S.radius * 2, S.radius * 2),
 		CFrame.new(ORIGIN - Vector3.new(0, 2, 0)) * flat,
 		stone,
 		Enum.Material.Basalt
 	)
-	pillar.Shape = Enum.PartType.Cylinder
-	local cageCount = G.cages
-	for i = 1, cageCount do
-		local a = (i - 1) / cageCount * math.pi * 2
-		local c = ORIGIN + Vector3.new(math.cos(a) * G.cageRadius, 0, math.sin(a) * G.cageRadius)
-		table.insert(cages, c)
-		local s = G.cageSize
-		-- Des barreaux de braise, et un toit : on voit les duels a travers.
-		-- (Trois barreaux par cote formaient un mur rouge continu, vu en image :
-		-- les coins seulement.)
-		for _, corner in { { -1, -1 }, { -1, 1 }, { 1, -1 }, { 1, 1 } } do
-			local bar = part(
+	floor.Shape = Enum.PartType.Cylinder
+	-- Un cercle de braise au bord du sol, et le rideau d'energie qu'on voit.
+	local trim = part(
+		"Liseré",
+		Vector3.new(0.3, S.radius * 2 - 1, S.radius * 2 - 1),
+		CFrame.new(ORIGIN + Vector3.new(0, 0.05, 0)) * flat,
+		rim,
+		Enum.Material.Neon
+	)
+	trim.Shape = Enum.PartType.Cylinder
+	trim.CanCollide = false
+	local inner = part(
+		"Sol",
+		Vector3.new(0.4, S.radius * 2 - 3, S.radius * 2 - 3),
+		CFrame.new(ORIGIN + Vector3.new(0, 0.1, 0)) * flat,
+		stone,
+		Enum.Material.Basalt
+	)
+	inner.Shape = Enum.PartType.Cylinder
+	for k = 1, S.segments do
+		local a0 = (k - 1) / S.segments * math.pi * 2
+		local a1 = k / S.segments * math.pi * 2
+		local p0 = ORIGIN + Vector3.new(math.cos(a0) * S.radius, 0, math.sin(a0) * S.radius)
+		local p1 = ORIGIN + Vector3.new(math.cos(a1) * S.radius, 0, math.sin(a1) * S.radius)
+		local mid = (p0 + p1) / 2 + Vector3.new(0, S.curtainHeight / 2, 0)
+		local panel = part(
+			"Rideau",
+			Vector3.new(0.4, S.curtainHeight, (p1 - p0).Magnitude + 0.1),
+			CFrame.lookAt(mid, mid + (p1 - p0)) * CFrame.Angles(0, math.pi / 2, 0),
+			rim,
+			Enum.Material.ForceField
+		)
+		panel.Transparency = S.curtainTransparency
+		panel.CanQuery = false
+		panel.CastShadow = false
+		-- Un barreau de fer tous les quelques panneaux, la pointe en braise.
+		if k % S.barEvery == 0 then
+			part(
 				"Barreau",
-				Vector3.new(0.3, 8, 0.3),
-				CFrame.new(c + Vector3.new(corner[1] * s / 2, 4, corner[2] * s / 2)),
-				cage,
+				Vector3.new(0.5, S.curtainHeight, 0.5),
+				CFrame.new(p0 + Vector3.new(0, S.curtainHeight / 2, 0)),
+				rgb(G.colors.iron),
+				Enum.Material.Metal
+			)
+			local tip = part(
+				"Pointe",
+				Vector3.new(0.7, 0.7, 0.7),
+				CFrame.new(p0 + Vector3.new(0, S.curtainHeight + 0.3, 0)),
+				ember,
 				Enum.Material.Neon
 			)
-			bar.CanQuery = false
-		end
-		local roof = part(
-			"Toit",
-			Vector3.new(s + 0.6, 0.4, s + 0.6),
-			CFrame.new(c + Vector3.new(0, 8.2, 0)),
-			stone,
-			Enum.Material.Slate
-		)
-		roof.CanQuery = false
-		-- Les murs invisibles qui gardent dans la cage.
-		for _, side in
-			{
-				Vector3.new(1, 0, 0),
-				Vector3.new(-1, 0, 0),
-				Vector3.new(0, 0, 1),
-				Vector3.new(0, 0, -1),
-			}
-		do
-			local barrier = part(
-				"MurCage",
-				Vector3.new(if side.X ~= 0 then 0.4 else s, 8, if side.Z ~= 0 then 0.4 else s),
-				CFrame.new(c + side * s / 2 + Vector3.new(0, 4, 0)),
-				cage,
-				Enum.Material.SmoothPlastic
-			)
-			barrier.Transparency = 1
+			tip.CanCollide = false
 		end
 	end
+	for k = 1, S.braziers do
+		local a = (k - 0.5) / S.braziers * math.pi * 2
+		brazier(
+			ORIGIN + Vector3.new(math.cos(a) * (S.radius - 4), 0, math.sin(a) * (S.radius - 4)),
+			1
+		)
+	end
+	-- L'Oeil vous regarde d'en haut : son iris de braise au plafond.
+	local iris = part(
+		"IrisDuVentre",
+		Vector3.new(0.6, S.radius, S.radius),
+		CFrame.new(ORIGIN + Vector3.new(0, above - 3, 0)) * flat,
+		ember,
+		Enum.Material.Neon
+	)
+	iris.Shape = Enum.PartType.Cylinder
+	iris.CanCollide = false
+	iris.CanQuery = false
+	local pupil = part(
+		"PupilleDuVentre",
+		Vector3.new(0.8, S.radius * 0.4, S.radius * 0.4),
+		CFrame.new(ORIGIN + Vector3.new(0, above - 3.2, 0)) * flat,
+		Color3.new(0, 0, 0),
+		Enum.Material.SmoothPlastic
+	)
+	pupil.Shape = Enum.PartType.Cylinder
+	pupil.CanCollide = false
+	pupil.CanQuery = false
+	(light(iris, "SpotLight", ember, above + 10, V.irisBrightness) :: any).Face = Enum.NormalId.Left
 end
 
 local function setState(actor: Roster.Actor, state: string?)
@@ -272,10 +401,15 @@ local function place(actor: Roster.Actor, at: Vector3, facing: Vector3?)
 	end
 end
 
+-- En attente : une place dans la Fosse, sur un cercle (chacun la sienne),
+-- tourne vers les plateformes de duel.
 local function toCage(actor: Roster.Actor)
+	local S = G.stand
 	local index = table.find(queue, actor) or (#queue + 1)
-	local cage = cages[((index - 1) % #cages) + 1]
-	place(actor, cage, ORIGIN)
+	local a = (index - 1) * S.spreadAngle
+	local r = S.radius * (if index % 2 == 0 then S.spreadInner else S.spreadOuter)
+	local at = ORIGIN + Vector3.new(math.cos(a) * r, 0, math.sin(a) * r)
+	place(actor, at, at + (at - ORIGIN))
 	setState(actor, "Cage")
 end
 
@@ -341,16 +475,24 @@ local function endDuel(duel: Duel)
 		return
 	end
 	duel.over = true
-	duel.platform.Transparency = 1
+	-- La plateforme retourne au repos : entiere, sombre, qu'on ne foule pas.
+	local V = G.look
+	local d = G.platformRadius * 2
+	duel.platform.Size = Vector3.new(G.platformThickness, d, d)
+	duel.rim.Size = Vector3.new(G.platformThickness * 0.6, d + 1, d + 1)
+	duel.platform.Transparency = V.idleTransparency
 	duel.platform.CanCollide = false
-	duel.rim.Transparency = 1
+	duel.rim.Transparency = V.idleTransparency
 	local light = duel.rim:FindFirstChildOfClass("PointLight")
 	if light then
-		light.Enabled = false
+		light.Brightness = V.idleRimBrightness
 	end
 	local embers = duel.rim:FindFirstChildOfClass("ParticleEmitter")
 	if embers then
 		embers.Enabled = false
+	end
+	if duel.spot then
+		duel.spot.Enabled = false
 	end
 	if duel.bot then
 		fighting[duel.bot] = nil
@@ -429,9 +571,10 @@ local function startDuel(a: Roster.Actor, b: Roster.Actor?, slot: number)
 	p.top.Transparency = 0
 	p.top.CanCollide = true
 	p.rim.Transparency = 0
+	p.spot.Enabled = true
 	local light = p.rim:FindFirstChildOfClass("PointLight")
 	if light then
-		light.Enabled = true
+		light.Brightness = G.look.rimBrightness
 	end
 	local embers = p.rim:FindFirstChildOfClass("ParticleEmitter")
 	if embers then
@@ -451,6 +594,7 @@ local function startDuel(a: Roster.Actor, b: Roster.Actor?, slot: number)
 		bot = bot,
 		platform = p.top,
 		rim = p.rim,
+		spot = p.spot,
 		center = p.center,
 		started = os.clock(),
 		over = false,

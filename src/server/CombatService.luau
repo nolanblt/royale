@@ -25,6 +25,7 @@ local RunService = game:GetService("RunService")
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
 local Melee = require(Royale:WaitForChild("Melee"))
+local ActionAnim = require(Royale:WaitForChild("Effets"):WaitForChild("ActionAnim"))
 
 local EyeService = require(script.Parent.EyeService)
 local HidingService = require(script.Parent.HidingService)
@@ -34,6 +35,28 @@ local Roster = require(script.Parent.Roster)
 local Sfx = require(script.Parent.Sfx)
 
 local CombatService = {}
+
+local impactRemote: RemoteEvent? = nil
+
+local function humanoidOfActor(actor: Roster.Actor): Humanoid?
+	local character = Roster.characterOf(actor)
+	return character and character:FindFirstChildOfClass("Humanoid")
+end
+
+-- Un geste d'un bot : le serveur le joue (celui d'un joueur, son client).
+local function botGesture(actor: Roster.Actor, name: string)
+	if not actor:IsA("Player") then
+		ActionAnim.play(Config.actionAnims, humanoidOfActor(actor), name)
+	end
+end
+
+-- Un coup qui porte : la cible recule, et tous le voient (ImpactView).
+local function landed(target: Roster.Actor, by: Roster.Actor, ko: boolean)
+	ActionAnim.play(Config.actionAnims, humanoidOfActor(target), "flinch")
+	if impactRemote then
+		impactRemote:FireAllClients(Roster.characterOf(target), Roster.characterOf(by), ko)
+	end
+end
 
 local C = Config.combat
 local Mv = Config.movement
@@ -315,6 +338,11 @@ local function hit(actor: Roster.Actor, root: BasePart)
 	if not ready(actor, "hit", C.hitCooldown) then
 		return
 	end
+	local swinging = actor:GetAttribute(Config.effects.batAttribute)
+	botGesture(
+		actor,
+		if (typeof(swinging) == "number" and swinging > 0) or inArena(actor) then "bat" else "punch"
+	)
 	local target = targetInFront(actor, root, C.hitRange)
 	-- Un Repris plus proche qu'un participant prend le coup.
 	local creature = creatureInFront(root)
@@ -326,6 +354,9 @@ local function hit(actor: Roster.Actor, root: BasePart)
 			away = Vector3.new(away.X, 0, away.Z)
 			local push = if away.Magnitude > 0 then away.Unit else Vector3.zero
 			creature.onHit(creature.id, actor, push)
+			if impactRemote then
+				impactRemote:FireAllClients(creature.root.Parent, Roster.characterOf(actor), false)
+			end
 			-- Se battre fait du bruit (CONCEPT.md).
 			EyeService.noise(creature.root.Position, C.hitNoiseSeconds, false)
 			Sfx.at("coup", creature.root)
@@ -367,6 +398,7 @@ local function hit(actor: Roster.Actor, root: BasePart)
 		states[target] = s
 		attackers[target] = { by = actor, at = now }
 		publish(target)
+		landed(target, actor, ko)
 		local targetRoot = Roster.rootOf(target)
 		if targetRoot then
 			local away = targetRoot.Position - root.Position
@@ -416,12 +448,14 @@ local function shove(actor: Roster.Actor, root: BasePart)
 	if not ready(actor, "shove", C.shoveCooldown) then
 		return
 	end
+	botGesture(actor, "shove")
 	local target = targetInFront(actor, root, C.shoveRange)
 	if target then
 		local targetRoot = Roster.rootOf(target)
 		if targetRoot then
 			impulse(targetRoot, forward * C.shoveSpeed + Vector3.new(0, C.shoveLift, 0))
 		end
+		landed(target, actor, false)
 		return
 	end
 	-- Sur un abri : on deloge celui qui y est.
@@ -656,7 +690,8 @@ local function step()
 	end
 end
 
-function CombatService.start(gestureRemote: RemoteEvent)
+function CombatService.start(gestureRemote: RemoteEvent, impact: RemoteEvent)
+	impactRemote = impact
 	gestureRemote.OnServerEvent:Connect(
 		RemoteGuard.wrap(Config.remotes.gesture, function(player: Player, name: any)
 			if typeof(name) == "string" then

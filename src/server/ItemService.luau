@@ -26,6 +26,8 @@ local RunService = game:GetService("RunService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Bag = require(Royale:WaitForChild("Bag"))
+local ItemModels = require(Royale:WaitForChild("Effets"):WaitForChild("ItemModels"))
+local ItemShapes = require(Royale:WaitForChild("ItemShapes"))
 local Config = require(Royale:WaitForChild("Config"))
 local Loot = require(Royale:WaitForChild("Loot"))
 local Throw = require(Royale:WaitForChild("Throw"))
@@ -104,7 +106,7 @@ local function publish(actor: Roster.Actor)
 		return
 	end
 	actor:SetAttribute(BG.attribute, Bag.encode(bagOf(actor)))
-	actor:SetAttribute(BG.selectedAttribute, selected[actor] or 1)
+	actor:SetAttribute(BG.selectedAttribute, selected[actor] or BG.hands)
 	-- Le Cocon se garde dans le sac et agit tout seul.
 	actor:SetAttribute(FX.cocoonAttribute, if Bag.has(bagOf(actor), "cocoon") then true else nil)
 end
@@ -197,8 +199,13 @@ local function dropOnGround(id: string, at: Vector3)
 end
 
 give = function(actor: Roster.Actor, id: string)
-	local b, _, dropped = Bag.add(bagOf(actor), id, selected[actor] or 1)
+	local b, slot, dropped = Bag.add(bagOf(actor), id, selected[actor] or BG.hands)
 	bags[actor] = b
+	-- Un bot tient ce qu'il ramasse (il ne change jamais d'objet lui-meme :
+	-- sinon on ne le verrait jamais rien tenir) ; un joueur choisit.
+	if not actor:IsA("Player") and (selected[actor] or BG.hands) == BG.hands then
+		selected[actor] = slot
+	end
 	publish(actor)
 	notify(actor, "Tu prends : " .. I[id].name)
 	if dropped ~= "" then
@@ -308,6 +315,147 @@ local function particles(part: BasePart, color: Color3, rate: number, size: numb
 	emitter.Parent = part
 end
 
+-- L'objet lui-meme pose au sol (ItemShapes), couche, pour `seconds` s : le
+-- petard qui crepite, la fusee qui brule (avant : un cube et un bloc de
+-- lumiere). Rend la piece qui porte les effets.
+local function prop(id: string, at: Vector3, seconds: number): BasePart
+	local FX_ = Config.landedItems
+	local ground = World.ground(at.X, at.Z) or at
+	local model = ItemModels.build(
+		ItemShapes,
+		id,
+		CFrame.new(ground + Vector3.new(0, FX_.lift, 0))
+			* CFrame.Angles(0, random:NextNumber(0, math.pi * 2), math.pi / 2),
+		FX_.scale
+	) :: Model
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+		end
+	end
+	model.Parent = partsFolder()
+	Debris:AddItem(model, seconds)
+	return model.PrimaryPart :: BasePart
+end
+
+-- Ce qu'on pose sur une cachette se voit (avant : rien) : des planches
+-- clouees ou un cadenas devant, une clochette accrochee, une croix a la
+-- craie. Pose devant sa premiere sortie, il part avec la cachette arrachee.
+local function onSpot(spot: HidingService.Spot, id: string, seconds: number)
+	local FX_ = Config.spotItems
+	local anchor = spot.exits[1] or spot.inside
+	local at = anchor.CFrame * CFrame.new(0, FX_.height, 0)
+	if id == "chalk" then
+		-- Une croix blanche, droite, face a la sortie.
+		local mark = Instance.new("Model")
+		mark.Name = "CroixDeCraie"
+		for _, angle in { 45, -45 } do
+			local stroke = Instance.new("Part")
+			stroke.Name = "Trait"
+			stroke.Anchored = true
+			stroke.CanCollide = false
+			stroke.CanQuery = false
+			stroke.CanTouch = false
+			stroke.Size = Vector3.new(FX_.chalkWidth, FX_.chalkLength, 0.05)
+			stroke.CFrame = at * CFrame.Angles(0, 0, math.rad(angle))
+			stroke.Color = Color3.fromRGB(240, 238, 228)
+			stroke.Material = Enum.Material.Concrete
+			stroke.Parent = mark
+		end
+		mark.Parent = spot.model
+		Debris:AddItem(mark, seconds)
+		return
+	end
+	local model = ItemModels.build(ItemShapes, id, at, FX_.scale)
+	if model == nil then
+		return
+	end
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			d.Anchored = true
+		end
+	end
+	model.Parent = spot.model
+	Debris:AddItem(model, seconds)
+end
+
+-- Des eclats qui volent et retombent (la bouteille qui se brise).
+local function shatter(at: Vector3, color: Color3)
+	local FX_ = Config.landedItems
+	for _ = 1, FX_.shards do
+		local shard = Instance.new("Part")
+		shard.Name = "Eclat"
+		shard.Size = Vector3.new(0.3, 0.05, 0.2) * random:NextNumber(0.6, 1.4)
+		shard.Color = color
+		shard.Material = Enum.Material.Glass
+		shard.Transparency = 0.2
+		shard.CanCollide = true
+		shard.CanQuery = false
+		shard.CanTouch = false
+		shard.CFrame = CFrame.new(at + Vector3.new(0, 0.5, 0))
+			* CFrame.Angles(random:NextNumber(0, 6), random:NextNumber(0, 6), 0)
+		shard.Parent = partsFolder()
+		shard.AssemblyLinearVelocity = Vector3.new(
+			random:NextNumber(-1, 1) * FX_.shardSpeed,
+			random:NextNumber(0.4, 1) * FX_.shardSpeed,
+			random:NextNumber(-1, 1) * FX_.shardSpeed
+		)
+		Debris:AddItem(shard, FX_.shardSeconds)
+	end
+end
+
+-- Un filet sur qui le recoit : des cordes en cage autour de lui, le temps
+-- qu'il est pris (avant : rien ne se voyait, il tombait seul).
+local function netOver(victim: Roster.Actor, seconds: number)
+	local FX_ = Config.landedItems
+	local root = Roster.rootOf(victim)
+	if root == nil then
+		return
+	end
+	local model = Instance.new("Model")
+	model.Name = "FiletPose"
+	local rope = Color3.fromRGB(120, 100, 70)
+	local r, h = FX_.netRadius, FX_.netHeight
+	local function cord(from: Vector3, to: Vector3)
+		local c = Instance.new("Part")
+		c.Name = "Corde"
+		c.Shape = Enum.PartType.Cylinder
+		c.Size = Vector3.new((to - from).Magnitude, 0.12, 0.12)
+		c.CFrame = CFrame.lookAt((from + to) / 2, to) * CFrame.Angles(0, math.pi / 2, 0)
+		c.Color = rope
+		c.Material = Enum.Material.Fabric
+		c.CanCollide = false
+		c.CanQuery = false
+		c.CanTouch = false
+		c.Massless = true
+		c.Parent = model
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0 = root
+		weld.Part1 = c
+		weld.Parent = c
+	end
+	local base = root.Position - Vector3.new(0, FX_.netBelow, 0)
+	local top = base + Vector3.new(0, h, 0)
+	local points: { Vector3 } = {}
+	for k = 1, FX_.netRopes do
+		local a = (k - 1) / FX_.netRopes * math.pi * 2
+		table.insert(points, Vector3.new(math.cos(a) * r, 0, math.sin(a) * r))
+	end
+	for k, p in points do
+		local q = points[k % #points + 1]
+		-- Les cordes montent du sol et se rejoignent au-dessus de la tete.
+		cord(base + p, top)
+		-- Deux tours de corde, a mi-hauteur et pres du sol.
+		for _, y in { 0.15, 0.55 } do
+			local ring = base + Vector3.new(0, h * y, 0)
+			local k1 = 1 - y
+			cord(ring + p * k1, ring + q * k1)
+		end
+	end
+	model.Parent = Roster.characterOf(victim)
+	Debris:AddItem(model, seconds)
+end
+
 -- Ce qu'un lancer fait la ou il tombe.
 local function land(id: string, at: Vector3, thrower: Roster.Actor)
 	local def = I[id]
@@ -325,17 +473,14 @@ local function land(id: string, at: Vector3, thrower: Roster.Actor)
 		Debris:AddItem(ball, def.seconds)
 	elseif id == "firecracker" then
 		EyeService.noise(at, def.seconds, true)
-		local p = effectPart("Petard", at, Vector3.one, Color3.fromRGB(255, 200, 80))
-		p.Material = Enum.Material.Neon
+		local p = prop(id, at, def.seconds)
 		particles(p, Color3.fromRGB(255, 220, 120), 60, 1, 0.6)
-		glow(p, p.Color, 20)
-		Debris:AddItem(p, def.seconds)
+		glow(p, Color3.fromRGB(255, 200, 80), 20)
 	elseif id == "flare" or id == "redFlare" then
 		local color = if id == "redFlare"
 			then Color3.fromRGB(255, 40, 30)
 			else Color3.fromRGB(255, 120, 60)
-		local p = effectPart("Fusee", at, Vector3.new(0.6, 1.2, 0.6), color)
-		p.Material = Enum.Material.Neon
+		local p = prop(id, at, def.seconds)
 		glow(p, color, 30)
 		particles(p, color, 30, 1, 1)
 		Debris:AddItem(p, def.seconds)
@@ -354,9 +499,15 @@ local function land(id: string, at: Vector3, thrower: Roster.Actor)
 			return if p.Parent then at else nil
 		end, def.seconds, id == "redFlare")
 	elseif id == "bottle" or id == "net" then
+		if id == "bottle" then
+			shatter(at, Color3.fromRGB(40, 110, 60))
+		end
 		-- Jamais le lanceur lui-meme (un objet ne touche pas son camp).
 		for _, victim in around(at, def.radius, thrower) do
 			CombatService.trip(victim, def.fall, nil)
+			if id == "net" then
+				netOver(victim, def.fall)
+			end
 		end
 	elseif id == "oil" then
 		local ground = World.ground(at.X, at.Z) or at
@@ -484,7 +635,7 @@ end
 
 -- Utiliser l'objet de la place choisie. Rend vrai s'il a servi (et s'en va).
 local function useItem(actor: Roster.Actor, look: Vector3?): boolean
-	local slot = selected[actor] or 1
+	local slot = selected[actor] or BG.hands
 	local id = bagOf(actor)[slot]
 	local def = I[id]
 	local root = Roster.rootOf(actor)
@@ -562,18 +713,23 @@ local function useItem(actor: Roster.Actor, look: Vector3?): boolean
 		local flat = Vector3.new(direction.X, 0, direction.Z)
 		flat = if flat.Magnitude > 0.1 then flat.Unit else Vector3.new(0, 0, -1)
 		local at = root.Position + flat * def.distance
-		local figure =
-			effectPart("Mannequin", at, Vector3.new(2, 5, 1), Color3.fromRGB(150, 130, 110))
-		figure.Material = Enum.Material.Fabric
-		figure.CanQuery = false
-		local head = effectPart(
-			"Tete",
-			at + Vector3.new(0, 3.2, 0),
-			Vector3.new(1.3, 1.3, 1.3),
-			figure.Color
-		)
-		head.Shape = Enum.PartType.Ball
-		head.Parent = figure
+		-- Le petit mannequin de bois du sac, a taille d'homme, pieds au sol.
+		local ground = World.ground(at.X, at.Z, { Roster.characterOf(actor) :: Instance }) or at
+		local scale = Config.heldItems.dummyScale
+		local figure = ItemModels.build(
+			ItemShapes,
+			"dummy",
+			CFrame.lookAt(ground, ground - flat)
+				* CFrame.new(0, scale * Config.items.dummy.standHeight, 0),
+			scale
+		) :: Model
+		for _, d in figure:GetDescendants() do
+			if d:IsA("BasePart") then
+				d.Anchored = true
+			end
+		end
+		figure.Name = "Mannequin"
+		figure.Parent = partsFolder()
 		Debris:AddItem(figure, def.seconds)
 		EyeService.lure(function(): Vector3?
 			return if figure.Parent then at else nil
@@ -598,6 +754,7 @@ local function useItem(actor: Roster.Actor, look: Vector3?): boolean
 				notify(actor, "Seulement dans une cachette solide.")
 			else
 				HidingService.barricade(ownSpot, def.seconds)
+				onSpot(ownSpot, id, def.seconds)
 				notify(actor, "Barricadé pour " .. def.seconds .. " s.")
 				done = true
 			end
@@ -607,9 +764,11 @@ local function useItem(actor: Roster.Actor, look: Vector3?): boolean
 				notify(actor, "Aucune cachette à côté.")
 			elseif id == "chalk" then
 				HidingService.mark(spot)
+				onSpot(spot, id, Config.spotItems.markSeconds)
 				done = true
 			elseif id == "bell" then
 				spot.bell = true
+				onSpot(spot, id, Config.spotItems.markSeconds)
 				done = true
 			elseif id == "trap" then
 				spot.trap = true
@@ -630,7 +789,7 @@ function ItemService.use(actor: Roster.Actor, look: Vector3?): boolean
 end
 
 function ItemService.select(actor: Roster.Actor, slot: number)
-	selected[actor] = math.clamp(math.floor(slot), 1, BG.slots)
+	selected[actor] = math.clamp(math.floor(slot), BG.hands, BG.slots)
 	publish(actor)
 end
 
@@ -711,7 +870,7 @@ local function hand(giver: Roster.Actor, receiver: Roster.Actor)
 	then
 		return
 	end
-	local slot = selected[giver] or 1
+	local slot = selected[giver] or BG.hands
 	local id = bagOf(giver)[slot]
 	if id == nil or id == "" then
 		notify(giver, "Tu ne tiens rien.")
@@ -946,7 +1105,7 @@ function ItemService.setup(actors: { Roster.Actor })
 	end
 	for _, actor in actors do
 		bags[actor] = Bag.new(BG.slots)
-		selected[actor] = 1
+		selected[actor] = BG.hands
 		publish(actor)
 		addStealPrompt(actor)
 		addGivePrompt(actor)
@@ -1131,7 +1290,7 @@ function ItemService.start(
 			if action == "select" and typeof(arg) == "number" then
 				ItemService.select(player, arg)
 			elseif action == "cycle" and (arg == 1 or arg == -1) then
-				ItemService.select(player, Bag.cycle(selected[player] or 1, arg, BG.slots))
+				ItemService.select(player, Bag.cycle(selected[player] or BG.hands, arg, BG.slots))
 			elseif action == "use" then
 				useItem(player, if typeof(arg) == "Vector3" then arg else nil)
 			end

@@ -64,10 +64,18 @@ local function lookedAt(player: Player): Vector3?
 	return hit and hit.Position
 end
 
+-- Le dernier signal de chacun : un « danger » juste apres un « ici » le
+-- remplace (le double appui), au lieu d'en poser deux l'un sur l'autre.
+local lastOf: { [string]: Part } = {}
+
 local function showSignal(kind: string, at: Vector3, from: string)
 	local def = SG.kinds[kind]
 	if def == nil then
 		return
+	end
+	local previous = lastOf[from]
+	if kind == "danger" and previous and previous.Parent then
+		previous:Destroy()
 	end
 	local anchor = Instance.new("Part")
 	anchor.Anchored = true
@@ -94,6 +102,7 @@ local function showSignal(kind: string, at: Vector3, from: string)
 	label.Text = def.text .. "\n" .. from
 	label.Parent = tag
 	Debris:AddItem(anchor, SG.seconds)
+	lastOf[from] = anchor
 end
 
 local function buildMap(gui: ScreenGui): (Frame, (Vector3) -> UDim2)
@@ -270,18 +279,22 @@ function GestureView.start()
 		end
 	end
 
-	InputBus.bind("RoyaleSignalDanger", function(_, state: Enum.UserInputState)
+	-- Un seul bouton de signal, comme dans les grands jeux en ligne : un appui
+	-- pose « ici » ; un second appui rapide le change en « danger ».
+	local lastSignal = -math.huge
+	InputBus.bind("RoyaleSignal", function(_, state: Enum.UserInputState)
 		if state == Enum.UserInputState.Begin then
-			signal("danger")
+			local now = os.clock()
+			if now - lastSignal <= Config.signals.doubleTapSeconds then
+				lastSignal = -math.huge
+				signal("danger")
+			else
+				lastSignal = now
+				signal("here")
+			end
 		end
 		return Enum.ContextActionResult.Sink
-	end, false, table.unpack(merged({ onFoot.signalDanger, hiddenCtx.signalDanger })))
-	InputBus.bind("RoyaleSignalIci", function(_, state: Enum.UserInputState)
-		if state == Enum.UserInputState.Begin then
-			signal("here")
-		end
-		return Enum.ContextActionResult.Sink
-	end, false, table.unpack(merged({ onFoot.signalHere, hiddenCtx.signalHere })))
+	end, false, table.unpack(merged({ onFoot.signal, hiddenCtx.signal })))
 	InputBus.bind("RoyaleCarte", function(_, state: Enum.UserInputState)
 		if state == Enum.UserInputState.Begin then
 			frame.Visible = not frame.Visible

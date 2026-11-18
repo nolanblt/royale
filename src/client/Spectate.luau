@@ -170,13 +170,17 @@ function Spectate.start()
 		info.Text = string.format(
 			if touch
 				then "Tu regardes %s%s · %s"
-				else "Tu regardes %s%s — L1 / R1 changer · %s · B quitter",
+				else "Tu regardes %s%s — " .. string.format(
+					"%s / %s changer",
+					ButtonIcons.name(S.previousPlayer),
+					ButtonIcons.name(S.nextPlayer)
+				) .. " · %s · " .. string.format("%s quitter", ButtonIcons.name(S.leave)),
 			watched.key,
 			if watched.mate then " (ton équipe)" else "",
 			if typeof(bet) == "string"
 				then "pari sur " .. bet
 				elseif touch then "Parier pour miser sur lui"
-				else "X parier sur lui"
+				else string.format("%s parier sur lui", ButtonIcons.name(S.bet))
 		)
 		local root = list[index].character:FindFirstChild("HumanoidRootPart")
 		if root and root:IsA("BasePart") then

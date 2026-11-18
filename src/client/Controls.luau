@@ -7,7 +7,8 @@
 	- B : en courant, glisser (le serveur fauche qui est devant) ; a l'arret,
 	  s'accroupir. En portant quelqu'un : le poser.
 	- A en l'air pres d'un rebord : s'agripper et se hisser.
-	- R2 : frapper (ou toquer a un abri) ; cache : sortir en force.
+	- R2 : se servir de ce qu'on tient (ItemView) ; mains nues, frapper (ou
+	  toquer a un abri) ; cache mains nues : sortir en force.
 	- Y : pousser, ou plaquer en courant ; maintenu sur un K.O. : le porter ;
 	  en portant : le jeter.
 	- X cache : sortir.
@@ -26,9 +27,12 @@ local UserInputService = game:GetService("UserInputService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
 local Config = require(Royale:WaitForChild("Config"))
+local ActionAnim = require(Royale:WaitForChild("Effets"):WaitForChild("ActionAnim"))
 
 local ButtonIcons = require(script.Parent.ButtonIcons)
 local InputBus = require(script.Parent.InputBus)
+local ItemView = require(script.Parent.ItemView)
+local SewerView = require(script.Parent.SewerView)
 
 local Controls = {}
 
@@ -73,6 +77,21 @@ end
 
 function Controls.start()
 	local player = Players.LocalPlayer
+	player.CameraMode = Enum.CameraMode.Classic
+	player.CameraMinZoomDistance = Config.camera.minZoom
+	player.CameraMaxZoomDistance = Config.camera.maxZoom
+	-- Cache dans un abri ferme : la premiere personne, pour voir dehors.
+	local function cameraForHiding()
+		local closed = player:GetAttribute(Config.hiding.closedAttribute) == true
+		player.CameraMode = if closed
+			then Enum.CameraMode.LockFirstPerson
+			else Enum.CameraMode.Classic
+		if not closed then
+			player.CameraMinZoomDistance = Config.camera.minZoom
+			player.CameraMaxZoomDistance = Config.camera.maxZoom
+		end
+	end
+	player:GetAttributeChangedSignal(Config.hiding.closedAttribute):Connect(cameraForHiding)
 	local remotes = Royale:WaitForChild(Config.remotes.folder)
 	local leaveRemote = remotes:WaitForChild(Config.remotes.leave) :: RemoteEvent
 	local gestureRemote = remotes:WaitForChild(Config.remotes.gesture) :: RemoteEvent
@@ -90,6 +109,21 @@ function Controls.start()
 		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 		local root = character and character:FindFirstChild("HumanoidRootPart")
 		return humanoid, if root and root:IsA("BasePart") then root else nil
+	end
+
+	-- A la troisieme personne, le corps regarde ou il marche : avant un
+	-- geste vers l'avant, il se tourne vers ou vise la camera.
+	local function faceCamera()
+		local _, root = parts()
+		local camera = workspace.CurrentCamera
+		if not Config.camera.faceOnAction or root == nil or camera == nil or root.Anchored then
+			return
+		end
+		local look = camera.CFrame.LookVector
+		local flat = Vector3.new(look.X, 0, look.Z)
+		if flat.Magnitude > 0.1 then
+			root.CFrame = CFrame.lookAt(root.Position, root.Position + flat.Unit)
+		end
 	end
 
 	local function isDown(): boolean
@@ -387,12 +421,33 @@ function Controls.start()
 
 	-- R2 : frapper ; cache, sortir en force (la porte dans la figure).
 	InputBus.bind("RoyaleFrapper", function(_, state: Enum.UserInputState)
+		-- Un objet en main : c'est lui qui sert (un lancer au doigt se vise
+		-- tant qu'on tient, et part au lacher).
+		if not isDown() and ItemView.holding() then
+			if state == Enum.UserInputState.Begin and not hidden() then
+				faceCamera()
+			end
+			ItemView.useHeld(state)
+			return Enum.ContextActionResult.Sink
+		end
 		if state ~= Enum.UserInputState.Begin then
 			return Enum.ContextActionResult.Pass
 		end
 		if hidden() then
 			gestureRemote:FireServer("burst")
 		elseif not isDown() then
+			faceCamera()
+			-- Le geste part tout de suite chez soi (Roblox le montre aux autres).
+			local bat = player:GetAttribute(Config.effects.batAttribute)
+			local humanoid = parts()
+			ActionAnim.play(
+				Config.actionAnims,
+				humanoid,
+				if (typeof(bat) == "number" and bat > 0)
+						or player:GetAttribute(Config.goulag.stateAttribute) ~= nil
+					then "bat"
+					else "punch"
+			)
 			gestureRemote:FireServer("hit")
 		end
 		return Enum.ContextActionResult.Pass
@@ -445,7 +500,9 @@ function Controls.start()
 			if isDown() or hidden() then
 				return Enum.ContextActionResult.Pass
 			end
+			faceCamera()
 			if not knockedOutNear() then
+				ActionAnim.play(Config.actionAnims, (parts()), "shove")
 				gestureRemote:FireServer("shove")
 				return Enum.ContextActionResult.Sink
 			end
@@ -475,7 +532,8 @@ function Controls.start()
 		end
 		-- Ou l'on regarde : d'un egout, on ressort par la plaque dans cette
 		-- direction.
-		leaveRemote:FireServer(workspace.CurrentCamera.CFrame.LookVector)
+		-- D'un egout : la plaque choisie (SewerView), que le serveur verifie.
+		leaveRemote:FireServer(workspace.CurrentCamera.CFrame.LookVector, SewerView.chosen())
 		return Enum.ContextActionResult.Sink
 	end, false, table.unpack(keys(hiddenCtx.leave)))
 end

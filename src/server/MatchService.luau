@@ -34,6 +34,7 @@ local Strings = require(Royale:WaitForChild("Strings"))
 
 local DailyService = require(script.Parent.DailyService)
 local BatService = require(script.Parent.BatService)
+local HeldService = require(script.Parent.HeldService)
 local CosmeticFx = require(Royale:WaitForChild("Effets"):WaitForChild("CosmeticFx"))
 local Avatar = require(script.Parent.Avatar)
 local BetService = require(script.Parent.BetService)
@@ -284,6 +285,37 @@ local function playOnce(humans: { Player }, mode: string, groups: { { Player } }
 	HidingService.setup(#players)
 	ItemService.setup(players)
 	table.clear(aims)
+	-- La carte chargee chez chaque joueur autour du centre, avant de viser.
+	local zone = ZoneService.current()
+	local center = World.ground(zone.x, zone.z) or Vector3.new(zone.x, 0, zone.z)
+	local focus = Instance.new("Part")
+	focus.Name = "RoyaleFocusVisee"
+	focus.Anchored = true
+	focus.CanCollide = false
+	focus.CanQuery = false
+	focus.Transparency = 1
+	focus.Position = center
+	focus.Parent = workspace
+	local waiting = 0
+	for _, player in humans do
+		if player:IsA("Player") then
+			player.ReplicationFocus = focus
+			waiting += 1
+			task.spawn(function()
+				local ok, err = pcall(function()
+					player:RequestStreamAroundAsync(center, M.streamSeconds)
+				end)
+				if not ok then
+					warn("[Royale] Chargement de la carte : " .. tostring(err))
+				end
+				waiting -= 1
+			end)
+		end
+	end
+	local streamStart = os.clock()
+	while waiting > 0 and os.clock() - streamStart < M.streamSeconds do
+		task.wait(0.1)
+	end
 	setPhase("Visee", M.aimSeconds)
 	for _, player in players do
 		if player:IsA("Player") and player.Character == nil then
@@ -307,6 +339,13 @@ local function playOnce(humans: { Player }, mode: string, groups: { { Player } }
 	local wasOpen, lastBurst = false, 0
 	local tick = Config.eye.tickSeconds
 	setPhase("Partie")
+	-- Au sol : le chargement suit de nouveau chacun.
+	for _, player in humans do
+		if player:IsA("Player") and player.Parent then
+			player.ReplicationFocus = nil
+		end
+	end
+	focus:Destroy()
 	local lastStep = os.clock()
 	while true do
 		task.wait(tick)
@@ -577,11 +616,12 @@ function MatchService.start()
 	LeaderboardService.start()
 	NotificationService.start(not isMatchServer())
 	BotService.start()
-	CombatService.start(remote(Config.remotes.gesture))
+	CombatService.start(remote(Config.remotes.gesture), remote(Config.remotes.impact))
 	EyePowerService.start()
 	ReprisService.start()
 	GoulagService.start()
 	BatService.start()
+	HeldService.start()
 	SquadService.start()
 	SignalService.start(remote(Config.remotes.signal))
 	BetService.start(remote(Config.remotes.bet), remote(Config.remotes.quit))
@@ -602,9 +642,13 @@ function MatchService.start()
 		end)
 	)
 	remote(Config.remotes.leave).OnServerEvent:Connect(
-		RemoteGuard.wrap(Config.remotes.leave, function(player: Player, look: any)
-			-- La direction regardee (pour ressortir d'un egout plus loin).
-			HidingService.leave(player, if typeof(look) == "Vector3" then look else nil)
+		RemoteGuard.wrap(Config.remotes.leave, function(player: Player, look: any, chosen: any)
+			-- D'un egout : la plaque choisie (son modele), verifiee par le serveur.
+			HidingService.leave(
+				player,
+				if typeof(look) == "Vector3" then look else nil,
+				if typeof(chosen) == "Instance" then chosen else nil
+			)
 		end)
 	)
 	-- Un elimine qui quitte : retour au salon (un serveur public dans le jeu

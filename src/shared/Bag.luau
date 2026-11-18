@@ -33,7 +33,8 @@ function Bag.decode(text: string, slots: number): Bag
 	return b
 end
 
--- Ajoute `id`. Sac plein : il prend la place choisie, et l'ancien tombe.
+-- Ajoute `id`. Sac plein : il prend la place choisie, et l'ancien tombe ;
+-- mains nues (place 0), il prend la premiere.
 -- Rend le nouveau sac, la place remplie et ce qui tombe ("" si rien).
 function Bag.add(b: Bag, id: string, selected: number): (Bag, number, string)
 	local out = table.clone(b)
@@ -43,9 +44,10 @@ function Bag.add(b: Bag, id: string, selected: number): (Bag, number, string)
 			return out, i, ""
 		end
 	end
-	local dropped = out[selected]
-	out[selected] = id
-	return out, selected, dropped
+	local at = if out[selected] then selected else 1
+	local dropped = out[at]
+	out[at] = id
+	return out, at, dropped
 end
 
 -- Retire l'objet de la place `i` ; rend le sac et ce qui y etait.
@@ -56,9 +58,10 @@ function Bag.take(b: Bag, i: number): (Bag, string)
 	return out, id
 end
 
--- La place suivante (ou precedente, `step` = -1), en boucle.
+-- La place suivante (ou precedente, `step` = -1), en boucle sur les mains
+-- nues (0) puis les places 1 a `slots`.
 function Bag.cycle(selected: number, step: number, slots: number): number
-	return (selected - 1 + step) % slots + 1
+	return (selected + step) % (slots + 1)
 end
 
 function Bag.has(b: Bag, id: string): number?

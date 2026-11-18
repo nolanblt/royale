@@ -129,6 +129,9 @@ local function board(): TextLabel?
 	text.TextColor3 = Color3.fromRGB(240, 232, 220)
 	text.TextXAlignment = Enum.TextXAlignment.Left
 	text.TextYAlignment = Enum.TextYAlignment.Top
+	-- Une phrase (classement vide, en anglais plus longue) passe a la ligne au
+	-- lieu de sortir du panneau (vu par Josh).
+	text.TextWrapped = true
 	text.Text = "…"
 	text.Parent = gui
 	return text

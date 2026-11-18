@@ -20,6 +20,7 @@ local SignalService = {}
 
 local SG = Config.signals
 local last: { [Player]: number } = {}
+local lastKind: { [Player]: string } = {}
 
 local function send(remote: RemoteEvent, player: Player, kind: any, at: any)
 	if typeof(kind) ~= "string" or SG.kinds[kind] == nil or typeof(at) ~= "Vector3" then
@@ -34,10 +35,15 @@ local function send(remote: RemoteEvent, player: Player, kind: any, at: any)
 		return
 	end
 	local now = os.clock()
-	if now - (last[player] or -math.huge) < SG.cooldown then
+	local since = now - (last[player] or -math.huge)
+	-- Le second appui d'un double appui (« ici » devenu « danger ») passe
+	-- malgre l'attente ; rien d'autre.
+	local upgrade = kind == "danger" and lastKind[player] == "here" and since <= SG.doubleTapSeconds
+	if since < SG.cooldown and not upgrade then
 		return
 	end
 	last[player] = now
+	lastKind[player] = kind
 	for _, other in Players:GetPlayers() do
 		if other == player or SquadService.allies(player, other) then
 			remote:FireClient(other, kind, at, player.DisplayName)
@@ -53,6 +59,7 @@ function SignalService.start(remote: RemoteEvent)
 	)
 	Players.PlayerRemoving:Connect(function(player: Player)
 		last[player] = nil
+		lastKind[player] = nil
 	end)
 end
 

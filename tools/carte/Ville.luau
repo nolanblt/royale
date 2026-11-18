@@ -363,6 +363,7 @@ return function(O: any, CONTRACT: any)
 		return m, base * CFrame.new(0, 3.2, 0.4)
 	end
 
+	local RUBBLE_STONE = Color3.fromRGB(72, 68, 64)
 	local function rubble(parent: Instance, center: Vector3, radius: number, count: number)
 		for _ = 1, count do
 			local angle = random:NextNumber(0, math.pi * 2)
@@ -376,14 +377,16 @@ return function(O: any, CONTRACT: any)
 				if isWood
 					then Vector3.new(0.4, 0.4 * s, s * 2.2)
 					else Vector3.new(s, s * 0.6, s * 0.9),
-				CFrame.new(at + Vector3.new(0, s * 0.25, 0))
+				-- A moitie enfonce, en pierre sombre : poses dessus et clairs, ils
+				-- passaient pour des cartons eparpilles (vu a l'image).
+				CFrame.new(at + Vector3.new(0, s * 0.08, 0))
 					* CFrame.Angles(
 						random:NextNumber(-0.6, 0.6),
 						random:NextNumber(0, math.pi),
 						random:NextNumber(-0.6, 0.6)
 					),
-				if isWood then Enum.Material.WoodPlanks else Enum.Material.Concrete,
-				if isWood then C.woodGray else C.concreteDark
+				if isWood then Enum.Material.WoodPlanks else Enum.Material.Slate,
+				if isWood then C.woodGray else RUBBLE_STONE
 			)
 		end
 	end

@@ -381,6 +381,7 @@ function EyeService.step(dt: number, regard: any, open: boolean, burst: number, 
 	local factor: { [Roster.Actor]: number } = {}
 	local byId: { [string]: Roster.Actor } = {}
 	local positions: { [Roster.Actor]: Vector3 } = {}
+	local roamers: { Targeting.Candidate } = {}
 	for _, player in alive do
 		local root = Roster.rootOf(player)
 		if root == nil then
@@ -409,6 +410,15 @@ function EyeService.step(dt: number, regard: any, open: boolean, burst: number, 
 					break
 				end
 			end
+		end
+		-- Ou errent les faisceaux sans cible : vers qui est a decouvert.
+		if inZone and not veiled then
+			table.insert(roamers, {
+				id = id,
+				x = root.Position.X,
+				z = root.Position.Z,
+				exposed = not hidden and sight > 0,
+			})
 		end
 		local f = if lit and inZone then sight else 0
 		factor[player] = f
@@ -534,6 +544,13 @@ function EyeService.step(dt: number, regard: any, open: boolean, burst: number, 
 				end
 			end
 		end
+		-- Qui est deja poursuivi n'attire pas en plus les faisceaux errants.
+		local roamTaken: { [string]: boolean } = {}
+		for _, beam in beams do
+			if beam.target then
+				roamTaken[beam.target] = true
+			end
+		end
 		for _, beam in beams do
 			local lured = forced[beam]
 			if lured then
@@ -570,14 +587,9 @@ function EyeService.step(dt: number, regard: any, open: boolean, burst: number, 
 					end
 				end
 				if goal == nil then
-					for _, p in positions do
-						if ZoneService.outside(p) then
-							continue
-						end
-						local d = (p.X - beam.x) ^ 2 + (p.Z - beam.z) ^ 2
-						if d < best then
-							best, goal = d, p
-						end
+					local pick = Targeting.roamGoal(beam.x, beam.z, roamers, roamTaken)
+					if pick then
+						goal = Vector3.new(pick.x, 0, pick.z)
 					end
 				end
 			end

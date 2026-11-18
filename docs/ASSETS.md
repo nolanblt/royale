@@ -81,5 +81,32 @@ la place.
 | K.O. | `88589009991204` | Allongé sur le dos, au ras du sol (tête 2,2 sous le bassin) | knocked out, lying motionless on the back on the ground, dazed, slight breathing |
 | Porté | `94783137609755` | Allongé à l'horizontale, 2 studs sous le bassin | limp body carried horizontally, lying stiff on the back with arms and legs dangling down, unconscious |
 
+## Animations des gestes (générées)
+
+Générées le 16 novembre 2026 par `generate_animation`, publiées sous le
+compte propriétaire du jeu (SachaReveilToi). Chaque clip est long et lent :
+on n'en joue que le passage utile, mesuré en partie sur un mannequin (la
+position des mains et de la tête toutes les 0,15 s), noté dans
+`Config.actionAnims`. Sources dans `ServerStorage.RBX_ASSISTANT_ANIMGEN`.
+
+| Geste | Asset | Passage gardé | Ce qu'on a mesuré | Demande |
+| --- | --- | --- | --- | --- |
+| Coup de poing | `96801437647133` | 0,3 → 0,9 s | garde, le poing à 2,4 studs devant à 0,6 s | quick right hand punch |
+| Batte | `109450619038823` | 0,3 → 1,5 s | élan derrière, puis la main balaie devant | swing a baseball bat with both hands horizontally |
+| Lancer | `104136587196042` | 0,75 → 2,4 s | bras armé derrière, lâché devant vers 1,9 s | overhand throw of a small object with the right hand |
+| Pousser | `136968998510594` | 0,2 → 0,75 s | les deux bras tendus devant, à 1,5 stud (remplace `91597627291471`, qui ne faisait que lever les mains, comme les jumelles) | two handed push, both arms extend straight forward hard |
+| Poser au sol | `86760954677122` | 3 → 6,2 s | à genoux, la tête descend de 1,5 stud, mains au sol | kneel and put something on the floor |
+| Aux yeux | `104079954938243` | 0,15 → 2,3 s | les deux mains au visage | raise binoculars to the eyes with both hands and look around |
+| Utiliser | `137776254622053` | 0,75 → 2,4 s | la main droite levée devant la poitrine | hold an object up in front of the chest with the right hand and activate it |
+| Coup reçu | `99409052245761` | 0,9 → 2,2 s | la tête part en arrière de 1,3 stud | get hit in the face and stagger back |
+
+Deux demandes plus longues ont échoué (« Animation generation failed ») ;
+une demande courte passe mieux.
+
+## Les objets de la partie
+
+Dessinés en pièces dans le code (`src/shared/ItemShapes.luau`), comme la
+batte : rien n'est généré ni stocké dans la place, tout est dans Git.
+
 Les Repris gardent les animations Zombie de Roblox (`616168032`,
 `616163682`, `616158929`), comme dans Survivor.

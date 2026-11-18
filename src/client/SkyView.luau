@@ -60,6 +60,10 @@ function SkyView.start()
 	local down = CFrame.lookAt(center, center - Vector3.new(0, 1, 0), Vector3.new(0, 0, 1))
 	-- Le reste du modele, exprime depuis « regarder droit en bas ».
 	local fromDown = down:ToObjectSpace(basePivot)
+	-- Le bout de la pupille, a cette distance du centre dans le sens du
+	-- regard : les faisceaux en partent ou que l'Oeil regarde (Josh, le 16
+	-- novembre 2026 : ils partaient d'un point fixe, le centre).
+	local pupilReach = (SkyView.eyeOrigin - center).Magnitude
 
 	type Lid = { model: Model, base: CFrame, open: number, closed: number }
 	local lids: { Lid } = {}
@@ -96,7 +100,14 @@ function SkyView.start()
 	tint.Parent = Lighting
 
 	local beamFolder = workspace:WaitForChild(Config.eye.beamsFolder, math.huge) :: Folder
-	type Drawn = { shaft: Part, spot: Part, x: number, z: number }
+	type Drawn = {
+		shaft: Part,
+		spot: Part,
+		x: number,
+		z: number,
+		foot: Vector3,
+		radius: number,
+	}
 	local drawn: { [string]: Drawn } = {}
 	local visuals = Instance.new("Folder")
 	visuals.Name = "RoyaleFaisceauxVus"
@@ -130,7 +141,7 @@ function SkyView.start()
 		light.Range = V.spotRange
 		light.Angle = V.spotAngle
 		light.Parent = spot
-		return { shaft = shaft, spot = spot, x = 0, z = 0 }
+		return { shaft = shaft, spot = spot, x = 0, z = 0, foot = Vector3.zero, radius = 0 }
 	end
 
 	local lidAmount = 1
@@ -168,11 +179,8 @@ function SkyView.start()
 			)
 			local groundY = if hit then hit.Position.Y else 0
 			local foot = Vector3.new(d.x, groundY, d.z)
-			local top = SkyView.eyeOrigin
-			local length = (top - foot).Magnitude
-			d.shaft.Size = Vector3.new(length, radius * 2, radius * 2)
-			d.shaft.CFrame = CFrame.lookAt((top + foot) / 2, foot)
-				* CFrame.Angles(0, math.pi / 2, 0)
+			d.foot = foot
+			d.radius = radius
 			d.spot.Size = Vector3.new(0.3, radius * 2, radius * 2)
 			d.spot.CFrame = CFrame.new(foot + Vector3.new(0, 0.2, 0))
 				* CFrame.Angles(0, 0, math.pi / 2)
@@ -216,6 +224,15 @@ function SkyView.start()
 		end
 		look = look:Lerp(wanted, math.clamp(dt * V.eyeTurnRate, 0, 1))
 		eye:PivotTo(look * fromDown)
+
+		-- Les colonnes, une fois l'Oeil tourne : du bout de la pupille au sol.
+		local top = center + look.LookVector * pupilReach
+		for _, d in drawn do
+			local length = (top - d.foot).Magnitude
+			d.shaft.Size = Vector3.new(length, d.radius * 2, d.radius * 2)
+			d.shaft.CFrame = CFrame.lookAt((top + d.foot) / 2, d.foot)
+				* CFrame.Angles(0, math.pi / 2, 0)
+		end
 
 		-- Les paupieres.
 		local target = if open then 1 else 0

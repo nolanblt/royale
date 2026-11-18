@@ -64,14 +64,16 @@ function AimView.start()
 		end
 	end)
 	-- Ce qu'on ecarte le temps de viser, et ce qu'on remet apres.
-	local saved: { density: number?, clouds: boolean? } = {}
+	local saved: { density: number?, haze: number?, clouds: boolean? } = {}
 	local function clearView(on: boolean)
 		local atmosphere = Lighting:FindFirstChildOfClass("Atmosphere")
 		local clouds = workspace.Terrain:FindFirstChildOfClass("Clouds")
 		if on then
 			if atmosphere then
 				saved.density = atmosphere.Density
+				saved.haze = atmosphere.Haze
 				atmosphere.Density = V.aimAtmosphereDensity
+				atmosphere.Haze = V.aimHaze
 			end
 			if clouds then
 				saved.clouds = clouds.Enabled
@@ -80,6 +82,7 @@ function AimView.start()
 		else
 			if atmosphere and saved.density then
 				atmosphere.Density = saved.density
+				atmosphere.Haze = saved.haze
 			end
 			if clouds and saved.clouds ~= nil then
 				clouds.Enabled = saved.clouds

@@ -161,6 +161,23 @@ return function(t: harness.Harness)
 		"deux faisceaux ne poursuivent jamais le meme joueur",
 		single[1].target ~= single[2].target
 	)
+	local crowd = {
+		{ id = "cache", x = 5, z = 0, exposed = false },
+		{ id = "dehors", x = 80, z = 0, exposed = true },
+		{ id = "dehors2", x = 120, z = 0, exposed = true },
+	}
+	local taken = {}
+	local first = Targeting.roamGoal(0, 0, crowd, taken)
+	t.equal(
+		"sans cible, il va vers qui est dehors avant qui est cache",
+		first and first.id,
+		"dehors"
+	)
+	local second = Targeting.roamGoal(0, 0, crowd, taken)
+	t.equal("un second faisceau errant va vers un autre", second and second.id, "dehors2")
+	local hiddenOnly = Targeting.roamGoal(0, 0, { crowd[1] }, {})
+	t.equal("personne dehors : vers le plus proche", hiddenOnly and hiddenOnly.id, "cache")
+	t.equal("personne du tout : il erre", Targeting.roamGoal(0, 0, {}, {}), nil)
 	local sx = Targeting.chaseStep(0, 0, 100, 0, R[1].chaseSpeed, 1)
 	t.check(
 		"un faisceau avance a sa vitesse, sans se teleporter",

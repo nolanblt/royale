@@ -335,6 +335,32 @@ function ShopView.start()
 	local buyScale = Instance.new("UIScale")
 	buyScale.Parent = buy
 
+	-- Le bandeau des reponses (tirage gagne, achat, ce qui manque) : le
+	-- serveur les ecrit dans le message du joueur, que seul l'ecran de partie
+	-- montrait, cache sous la boutique ; tirer semblait ne rien faire (vu par
+	-- Josh au telephone). Juste au-dessus de la barre du detail.
+	local notice = Instance.new("Frame")
+	notice.Name = "Bandeau"
+	notice.AnchorPoint = Vector2.new(0.5, 1)
+	notice.Position = UDim2.new(0.5, 0, 1, -(UI.footHeight + UI.pad / 2 + UI.detailHeight + 8))
+	notice.Size = UDim2.new(1, -2 * UI.pad, 0, UI.noticeHeight)
+	notice.BackgroundColor3 = rgb(UI.cardSelected)
+	notice.Visible = false
+	notice.Parent = panel
+	round(notice, UI.corner)
+	UiKit.stroke(notice, rgb(LANTERN), 2, 0.1)
+	local noticeText = label(notice, "", UI.textSize, V.bodyBoldFont, text)
+	noticeText.Size = UDim2.new(1, -24, 1, 0)
+	noticeText.Position = UDim2.fromOffset(12, 0)
+	noticeText.TextTruncate = Enum.TextTruncate.AtEnd
+	local noticeScale = Instance.new("UIScale")
+	noticeScale.Parent = notice
+	-- Ce que l'ecran dit lui-meme (ce qui manque), et quand.
+	local localNotice, localAt = "", -math.huge
+	local function say(message: string)
+		localNotice, localAt = message, workspace:GetServerTimeNow()
+	end
+
 	-- Le pied : les boutons de la manette (ou, au doigt, ce qu'on peut toucher).
 	local foot = Instance.new("Frame")
 	foot.BackgroundTransparency = 1
@@ -1122,9 +1148,21 @@ function ShopView.start()
 
 	act = function(key: string)
 		for _, p in picks do
-			if p.key == key and p.entry.action and missing(p.entry) == 0 then
-				remote:FireServer(p.entry.action, p.entry.arg)
-				UiKit.pop(buyScale, UI.popFrom, 1, UI.selectSeconds * 2)
+			if p.key == key and p.entry.action then
+				local short = missing(p.entry)
+				if short > 0 then
+					-- Refuse en le disant : un toucher sans reponse passait pour une panne.
+					say(
+						string.format(
+							"Il te manque %d %s",
+							short,
+							if p.entry.priceKind == "fragments" then "fragments" else "crédits"
+						)
+					)
+				else
+					remote:FireServer(p.entry.action, p.entry.arg)
+					UiKit.pop(buyScale, UI.popFrom, 1, UI.selectSeconds * 2)
+				end
 			end
 		end
 	end
@@ -1337,9 +1375,31 @@ function ShopView.start()
 	end)
 
 	-- Ce que le serveur change (achat, credits) se voit tout de suite.
+	local shown = ""
 	RunService.Heartbeat:Connect(function()
 		if open and player:GetAttribute(Config.match.aliveAttribute) ~= nil then
 			close()
+		end
+		-- Le bandeau : la reponse la plus recente, celle de l'ecran ou du serveur.
+		local now = workspace:GetServerTimeNow()
+		local message = ""
+		local serverText, serverAt = string.match(
+			tostring(player:GetAttribute(Config.bag.messageAttribute) or ""),
+			"^(.*)|([%d%.]+)$"
+		)
+		local serverTime = tonumber(serverAt) or -math.huge
+		if serverText and now - serverTime < UI.noticeSeconds and serverTime >= localAt then
+			message = serverText
+		elseif now - localAt < UI.noticeSeconds then
+			message = localNotice
+		end
+		notice.Visible = open and message ~= ""
+		if message ~= shown then
+			shown = message
+			noticeText.Text = message
+			if message ~= "" then
+				UiKit.pop(noticeScale, UI.popFrom, 1, UI.selectSeconds * 2)
+			end
 		end
 	end)
 	for _, attribute in

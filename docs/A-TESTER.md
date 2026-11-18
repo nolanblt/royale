@@ -900,3 +900,97 @@ traduction). **Jamais vu à l'écran** : Studio est resté bloqué au lancement
    classement : c'est voulu, seules les parties publiques comptent.
 4. **Au téléphone** : le nouveau bouton « Publique / privée » se touche, et
    la rangée de boutons tient dans l'écran ?
+
+## Retours du téléphone, le salon (16 novembre 2026)
+
+Vérifié par le calcul (744 tests, analyse) ; **jamais vu à l'écran**.
+Republier depuis Studio avant de retester.
+
+1. **Tirages** : dans la boutique, un tirage montre maintenant un bandeau
+   au-dessus de la barre du bas (« Tirage : … », ou « Il te manque 20
+   fragments »). Il apparaît bien, assez longtemps pour lire ?
+2. **Classement** : la phrase « Personne ne lui a encore échappé… » passe à
+   la ligne et reste dans le panneau ?
+3. **Cachettes en vitrine** : les noms flottent au-dessus de chaque cachette
+   (même les grandes) et se lisent même derrière un objet ?
+4. **Vitrines solides** : on ne traverse plus les voitures ni les casiers.
+   Aucun mur invisible autour, et rien ne bloque le passage dans le salon ?
+
+## Après la grande refonte (16 novembre 2026)
+
+Vérifié par le calcul (719 tests, analyse sans erreur) et en partie lancée
+depuis Studio (pas d'erreur au démarrage, objets en main chez les bots,
+photo prise). **Jamais joué en vrai**, ni à la manette ni au téléphone.
+Republier depuis Studio avant (la carte a changé : soubassements, bougies,
+emplacements).
+
+Dans cet ordre :
+
+1. **La troisième personne** : on voit mieux ce qu'on fait ? La caméra
+   recule assez, pas trop ? Elle ne traverse pas les murs dans les maisons
+   et les cachettes ?
+2. **La manette** : R2 frappe aux mains nues, utilise ou lance l'objet
+   tenu ; L1 / R1 passent par « Mains nues » ; L2 maintenu montre l'arc et
+   R2 lance. Ça te paraît naturel, comme dans les autres jeux ?
+3. **Le signal** : croix haut une fois « ici », deux fois vite « danger ».
+4. **Le téléphone** : moins de boutons ; le gros bouton change de nom
+   (Frapper, Utiliser, Lancer) ; Pousser apparaît seulement près de
+   quelqu'un ; toucher une place du sac la prend en main.
+5. **Les objets** : ils se voient en main, chez toi et chez les autres ? Ils
+   sont beaux, ou il faut les retravailler ? Lesquels ?
+6. **Les gestes** : coup de poing, batte, lancer, poser au sol, jumelles.
+   Ils ne sont pas trop lents, ni bizarres en courant ?
+7. **Taper quelqu'un** : la cible clignote, recule, tu vois une croix ;
+   frappé, l'écran rougit et tremble. Ça suffit pour sentir le coup ?
+8. **Les meubles à fouiller** : le contour doré se voit sans être criard ?
+9. **L'Œil** : à découvert, il vient vers toi bien plus souvent ? Les
+   faisceaux partent bien du centre de la pupille quand il tourne ?
+10. **La carte** : plus de maison ni de voiture en l'air ? Si tu en vois
+    encore une, note où (la carte, croix gauche). Les maisons éclairées à
+    la bougie donnent envie d'entrer ?
+11. **Le mur du cercle** : le rideau rouge est plus beau ? La ligne blanche
+    du prochain cercle se voit ?
+
+## Les égouts (16 novembre 2026)
+
+Vérifié en partie lancée depuis Studio : 30 salles construites, aucun trou
+de surface autour des plaques (mesuré au rayon), photo de la salle, trajet
+de 38 m testé (noir, puis sortie à la bonne plaque). **Les repères au-dessus
+des plaques ne se voient pas en photo** (limite de l'outil) : à regarder.
+
+1. Descendre dans un égout : la salle se voit bien (briques, lampe, eau,
+   échelle) ? La caméra n'y est pas coincée dans un mur ?
+2. Les repères des autres plaques se voient à travers le sol, avec leur
+   distance ? La croix gauche / droite change bien la plaque choisie
+   (celle en couleur lanterne) ?
+3. X : le noir, puis on ressort à la plaque choisie. Le temps de trajet
+   est bon (ni trop court, ni trop long) ?
+4. Au téléphone : les flèches ‹ › apparaissent, puis Sortir.
+
+## Le Ventre et le skin (16 novembre 2026)
+
+Vu en partie lancée depuis Studio : le Ventre arrive en entier (186 pièces
+chez le joueur, avant 0), photo de la Fosse et d'un duel contre le Repris
+(contour visible), un vrai duel joué jusqu'au bout. Pas joué à plusieurs.
+
+1. **Aspiré** : tu arrives dans la Fosse, tout de suite éclairée ; tu
+   comprends où tu es grâce au texte ? Tu peux marcher, sans mur invisible ?
+2. **Le duel** : la plateforme est éclairée, l'adversaire (joueur ou Repris)
+   se voit nettement avec son contour rouge ?
+3. **Gagné** : tu retombes dans la partie normalement ?
+4. **Le skin** : au salon puis en partie, tout le monde (toi compris) a
+   l'avatar neutre du jeu, jamais son avatar Roblox ?
+
+## Après le contrôle complet (16 novembre 2026)
+
+1. **La visée du départ** : la ville se voit nettement d'en haut, dès le
+   début (avant, souvent rien) ?
+2. **Caché dans une voiture ou une armoire** : la vue passe à la première
+   personne, et on voit dehors ? Elle revient à la troisième en sortant ?
+3. **Au clavier** : les aides disent « E », « Clic gauche »… et à la
+   manette « X », « R2 » ?
+4. **Lancer une bouteille, un filet** : éclats, cage de cordes sur la cible ?
+5. **Planches, cadenas, clochette, craie** : se voient sur la cachette ?
+6. **Les textures de la carte** dans le jeu publié (routes, murs) : 16
+   avertissements « pas la permission » au démarrage dans Studio concernent
+   les matières générées. Si les routes sont lisses et grises en jeu, dis-le.

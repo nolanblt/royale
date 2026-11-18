@@ -29,6 +29,8 @@ local Kit = require(script:WaitForChild("Kit"))
 local Ville = require(script:WaitForChild("Ville"))(Outils, Kit.CONTRACT)
 local Batiment = require(script:WaitForChild("Batiment"))(Outils, Ville, Kit.CONTRACT)
 local Prefabs = require(script:WaitForChild("Prefabs"))(Outils, Kit.CONTRACT)
+local Ancrage = require(script:WaitForChild("Ancrage"))(Kit.CONTRACT)
+local Eclairage = require(script:WaitForChild("Eclairage"))()
 
 local CONTRACT = Kit.CONTRACT
 
@@ -147,6 +149,20 @@ local function build(options: Options?): string
 			task.wait()
 		end
 	end
+
+	-- Les emplacements descendent au sol, les batiments en pente recoivent
+	-- un soubassement (Ancrage) ; la mesure ci-dessous verifie ensuite.
+	do
+		local done, trouble = Ancrage(kit, prefabs)
+		for _, line in done do
+			table.insert(summaries, line)
+		end
+		for _, line in trouble do
+			table.insert(problems, line)
+		end
+	end
+	-- Des bougies et des lanternes dans une maison sur deux (Eclairage).
+	table.insert(summaries, Eclairage(kit.root))
 
 	-- RIEN NE FLOTTE : sous chaque modele pose d'une zone (batiment, arbre,
 	-- voiture, objet), un rayon doit toucher le sol ou une autre piece a

@@ -67,6 +67,42 @@ function Targeting.assign(
 	return out
 end
 
+export type Candidate = { id: string, x: number, z: number, exposed: boolean }
+
+-- Ou va un faisceau sans cible (Josh, le 16 novembre 2026 : « il ne me
+-- cherchait jamais quand j'etais dehors ») : vers le plus proche des
+-- participants a decouvert (dehors, pas sous un toit ni cache) qu'aucun
+-- autre faisceau errant n'a deja pris ; s'il n'y en a pas, vers le plus
+-- proche de tous. `taken` se remplit au fil des faisceaux.
+-- Il ne voit toujours pas a travers les murs : il se dirige, il ne detecte
+-- pas (la jauge ne monte que sous sa lumiere, ligne de vue comprise).
+function Targeting.roamGoal(
+	x: number,
+	z: number,
+	candidates: { Candidate },
+	taken: { [string]: boolean }
+): Candidate?
+	local function nearest(onlyExposed: boolean, skipTaken: boolean): Candidate?
+		local best: Candidate? = nil
+		local bestD = math.huge
+		for _, c in candidates do
+			if (onlyExposed and not c.exposed) or (skipTaken and taken[c.id]) then
+				continue
+			end
+			local d = (c.x - x) ^ 2 + (c.z - z) ^ 2
+			if d < bestD then
+				best, bestD = c, d
+			end
+		end
+		return best
+	end
+	local goal = nearest(true, true) or nearest(true, false) or nearest(false, false)
+	if goal then
+		taken[goal.id] = true
+	end
+	return goal
+end
+
 -- Ou un faisceau vise : la cible, decalee de son erreur de visee (`ex`, `ez`
 -- entre -1 et 1, tires par l'appelant). Avec l'erreur a 5, pile sur toi.
 function Targeting.aimPoint(

@@ -51,6 +51,15 @@ local function label(
 	local limit = Instance.new("UITextSizeConstraint")
 	limit.MaxTextSize = textSize
 	limit.Parent = l
+	-- Une largeur en pixels au plus, jamais plus que l'ecran : a 760 pixels
+	-- fixes, une ligne depassait des deux cotes d'un ecran etroit (vu en
+	-- image, et un telephone est plus etroit encore).
+	if size.X.Scale == 0 then
+		l.Size = UDim2.new(V.hudWidthShare, 0, size.Y.Scale, size.Y.Offset)
+		local cap = Instance.new("UISizeConstraint")
+		cap.MaxSize = Vector2.new(size.X.Offset, math.huge)
+		cap.Parent = l
+	end
 	l.Text = ""
 	l.Parent = parent
 	return l
@@ -253,7 +262,9 @@ function Hud.start()
 			phase == "Partie" and player:GetAttribute(Config.goulag.stateAttribute) == "Cage"
 		then
 			local round = workspace:GetAttribute(Config.goulag.roundAttribute)
-			text = "LE VENTRE DE L'ŒIL\nUn seul en ressort. Jette l'autre dans le vide."
+			-- Ce qu'on fait ici, des l'arrivee (Josh ne comprenait pas ou il etait).
+			text =
+				"LE VENTRE DE L'ŒIL\nDernière chance : gagne ton duel, il te recrache dans la partie."
 			if typeof(round) == "number" and round > now then
 				text ..= string.format("\nProchain duel dans %d s", math.ceil(round - now))
 			end
@@ -321,16 +332,31 @@ function Hud.start()
 		local carried = player:GetAttribute(Config.combat.carryingAttribute)
 		-- Au doigt, les noms des boutons a l'ecran (pas ceux de la manette).
 		local touch = ButtonIcons.touch()
-		hint.Text = if typeof(hidden) == "string"
-			then (if touch
+		-- Dans un egout, SewerView a sa propre aide (choisir la sortie).
+		local inSewer = hidden == Config.hiding.displayNames[Config.hiding.sewer.name]
+		hint.Text = if inSewer
+			then ""
+			elseif typeof(hidden) == "string" then (if touch
 				then "Caché (" .. hidden .. ") · Sortir, ou Jaillir en force"
-				else "Caché (" .. hidden .. ") · X sortir · R2 jaillir")
+				else string.format(
+					"Caché (%s) · %s sortir · %s jaillir",
+					hidden,
+					ButtonIcons.name(Config.controls.contexts.hidden.leave),
+					ButtonIcons.name(Config.controls.contexts.hidden.burstOut)
+				))
 			elseif typeof(carried) == "string" then "Tu portes " .. carried .. (if touch
 				then " — Jeter ou Poser"
-				else " — Y jeter, B poser")
+				else string.format(
+					" — %s jeter, %s poser",
+					ButtonIcons.name(Config.controls.contexts.carrying.throw),
+					ButtonIcons.name(Config.controls.contexts.carrying.putDown)
+				))
 			elseif player:GetAttribute(Config.goulag.stateAttribute) == "Duel" then (if touch
-				then "Frapper · 3 coups le mettent à terre, un de plus l'envoie dans le vide"
-				else "R2 frapper · 3 coups le mettent à terre, un de plus l'envoie dans le vide")
+				then "Frapper · 3 coups : à terre · 1 de plus : dans le vide"
+				else string.format(
+					"%s frapper · 3 coups : à terre · 1 de plus : dans le vide",
+					ButtonIcons.name(Config.controls.contexts.gulag.hit)
+				))
 			else ""
 		-- L'issue d'un duel du Ventre, pour tout le monde, quelques secondes.
 		local issue = workspace:GetAttribute(Config.goulag.resultAttribute)

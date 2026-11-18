@@ -380,6 +380,25 @@ vignettes**. Roblox dit que c'est ce qui réduit les départs rapides.
   tes amis (et les 100 visites qu'il faut pour les notifications), ensuite
   la pub.
 
+## 11. Le calendrier concret (écrit le 16 novembre 2026)
+
+Heures en France. En novembre, la côte est des États-Unis a 6 h de moins.
+
+| Jour | Ce qu'on fait |
+| --- | --- |
+| Mar 17 – mer 18 nov | Parties de test dans le jeu publié (privé), téléphone, anglais, un achat de test. Je corrige, Josh republie. |
+| Jeu 19 nov | Deuxième partie de test sur la version corrigée. Si rien ne bloque : feu vert. |
+| Ven 20 nov, ~21 h | Remise à zéro du classement, publication, jeu **public**. Josh et ses amis jouent le soir et le week-end (les parties entre amis comptent pour Roblox). |
+| Sam 21 – lun 23 nov | Aucun changement (Roblox mesure). Lecture des chiffres chaque matin. |
+| Mar 24 nov | Bilan des 72 h. Bons chiffres : pub de test (~10 €) mar 24 – mer 25. Mauvais : on corrige d'abord. |
+| Jeu 26 – dim 29 nov | Thanksgiving aux États-Unis (écoles fermées jeudi-vendredi) : grosse affluence. Si le test est bon : ~20 € sur ces quatre jours. |
+| Début décembre | Première mise à jour (vendredi), déclarée comme événement ; candidature « Today's Picks ». |
+| Avant le ven 18 déc | Mise à jour de Noël (saison 2 du passe ou nouveauté de l'Œil) : les vacances sont le pic de l'année. |
+
+Seuils pour payer de la pub (guides de créateurs, pas officiels) : revient
+le lendemain 20 % au moins (30 % bien), session de 10 min au moins (15 min
+bien), peu de départs avant 3 min, aucune erreur de script fréquente.
+
 ## Sources
 
 - [Discovery — documentation officielle Roblox](https://create.roblox.com/docs/discovery)

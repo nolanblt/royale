@@ -5,14 +5,16 @@
 	facilement et sympa sur telephone »).
 
 	Le stick (gauche) et le saut (droite) restent ceux de Roblox ; on regarde
-	en glissant le doigt. Nos boutons se rangent en arc autour du saut, le
-	pouce droit les atteint tous : Frapper (le plus gros), Objet (maintenu :
-	viser, lacher : lancer), Pousser (maintenu sur un K.O. : le porter),
-	Accroupi (en courant : glisser ; maintenu : ramper), Courir (bascule), et
-	les deux fleches du sac. Ils changent de nom selon la situation : cache,
-	Frapper devient Jaillir et Pousser devient Sortir ; en portant, Jeter et
-	Poser. En haut a droite : la carte, les signaux, l'emote. Elimine : la
-	rangee du spectateur.
+	en glissant le doigt. Peu de boutons (Josh, le 16 novembre 2026 : il y en
+	avait trop), comme les jeux Roblox au telephone : un gros bouton d'action
+	qui dit ce qu'il fait selon ce qu'on tient (Frapper, Utiliser, Lancer :
+	maintenu on vise, lache on lance), Accroupi (en courant : glisser ;
+	maintenu : ramper), Courir (bascule), et Pousser seulement quand
+	quelqu'un est a portee. On choisit ce qu'on tient en touchant sa place
+	dans le sac (ItemView). Cache, Frapper devient Jaillir et Pousser devient
+	Sortir ; en portant, Jeter et Poser. En haut a droite : la carte, le
+	signal (deux touches : danger), l'emote. Elimine : la rangee du
+	spectateur.
 
 	Chaque bouton lance l'action du jeu par InputBus, comme le bouton de
 	manette qu'il remplace : aucune regle n'est recopiee ici.
@@ -27,6 +29,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
+local Bag = require(Royale:WaitForChild("Bag"))
 local Config = require(Royale:WaitForChild("Config"))
 
 local ButtonIcons = require(script.Parent.ButtonIcons)
@@ -41,6 +44,7 @@ local F = Config.controls.contexts.onFoot
 local HC = Config.controls.contexts.hidden
 local S = Config.controls.contexts.spectating
 local H = Config.lobby.hud
+local sewerName = Config.hiding.displayNames[Config.hiding.sewer.name]
 local LANTERN = Config.lobby.colors.lantern
 
 local rgb = UiKit.rgb
@@ -67,6 +71,8 @@ function TouchControls.start()
 	gui.Parent = player:WaitForChild("PlayerGui")
 
 	local buttons: { [string]: Button } = {}
+	local overlap = OverlapParams.new()
+	overlap.FilterType = Enum.RaycastFilterType.Exclude
 
 	-- Un rond (ou une pastille) a la facon du jeu : sombre, cerne de lanterne.
 	local function make(id: string, pill: boolean): Button
@@ -126,13 +132,44 @@ function TouchControls.start()
 		make(id, false)
 	end
 	-- La colonne du haut, et la rangee du spectateur.
-	local smallOrder = { "map", "danger", "here", "emote" }
+	local smallOrder = { "map", "signal", "emote" }
 	for _, id in smallOrder do
 		make(id, false)
 	end
 	local pillOrder = { "watchPrevious", "bet", "watchNext", "quit" }
 	for _, id in pillOrder do
 		make(id, true)
+	end
+
+	-- L'objet tenu (la place choisie du sac), ou rien aux mains nues.
+	local function heldItem(): any
+		local text = player:GetAttribute(Config.bag.attribute)
+		local bag = Bag.decode(if typeof(text) == "string" then text else "", Config.bag.slots)
+		local sel = player:GetAttribute(Config.bag.selectedAttribute)
+		return if typeof(sel) == "number" then Config.items[bag[sel]] else nil
+	end
+
+	-- Quelqu'un (joueur, bot, Repris) a portee de poussee devant soi : sinon
+	-- le bouton Pousser n'a rien a faire a l'ecran.
+	local function someoneInReach(): boolean
+		local character = player.Character
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		if root == nil or not root:IsA("BasePart") then
+			return false
+		end
+		local reach = Config.touch.shoveShowRange
+		for _, part in workspace:GetPartBoundsInRadius(root.Position, reach, overlap) do
+			local model = part:FindFirstAncestorOfClass("Model")
+			if
+				model
+				and model ~= character
+				and model:FindFirstChildOfClass("Humanoid")
+				and part.Name == "HumanoidRootPart"
+			then
+				return true
+			end
+		end
+		return false
 	end
 
 	-- Ce que fait chaque bouton dans la situation : action, bouton de manette
@@ -165,27 +202,43 @@ function TouchControls.start()
 		local hidden = player:GetAttribute(Config.hiding.hiddenAttribute) ~= nil
 		local carrying = player:GetAttribute(Config.combat.carryingAttribute) ~= nil
 		out.map = { action = "RoyaleCarte", gamepad = F.map.gamepad, text = "Carte" }
-		out.danger =
-			{ action = "RoyaleSignalDanger", gamepad = F.signalDanger.gamepad, text = "Danger" }
-		out.here = { action = "RoyaleSignalIci", gamepad = F.signalHere.gamepad, text = "Ici" }
-		out.previousItem =
-			{ action = "RoyaleObjetChoix", gamepad = F.previousItem.gamepad, text = "<" }
-		out.nextItem = { action = "RoyaleObjetChoix", gamepad = F.nextItem.gamepad, text = ">" }
-		out.useItem =
-			{ action = "RoyaleObjetUtiliser", gamepad = F.useItem.gamepad, text = "Objet" }
+		out.signal = { action = "RoyaleSignal", gamepad = F.signal.gamepad, text = "Signal" }
+		-- Le gros bouton dit ce qu'il fera : l'objet tenu, sinon frapper.
+		local held = heldItem()
+		local action = if held == nil
+			then "Frapper"
+			elseif held.kind == "throw" then "Lancer"
+			else "Utiliser"
 		if hidden then
-			out.hit = { action = "RoyaleFrapper", gamepad = HC.burstOut.gamepad, text = "Jaillir" }
+			out.hit = {
+				action = "RoyaleFrapper",
+				gamepad = HC.burstOut.gamepad,
+				text = if held then action else "Jaillir",
+			}
 			out.shove = { action = "RoyaleSortir", gamepad = HC.leave.gamepad, text = "Sortir" }
+			-- Dans un egout : choisir la plaque ou ressortir (SewerView).
+			if player:GetAttribute(Config.hiding.hiddenAttribute) == sewerName then
+				out.watchPrevious = {
+					action = "RoyaleEgoutChoix",
+					gamepad = HC.previousExit.gamepad,
+					text = "‹",
+				}
+				out.watchNext =
+					{ action = "RoyaleEgoutChoix", gamepad = HC.nextExit.gamepad, text = "›" }
+			end
 			return out
 		end
 		out.emote = { action = "RoyaleEmote", gamepad = F.emote.gamepad, text = "Emote" }
-		out.hit = { action = "RoyaleFrapper", gamepad = F.hit.gamepad, text = "Frapper" }
+		out.hit = { action = "RoyaleFrapper", gamepad = F.hit.gamepad, text = action }
 		out.sprint = { action = "RoyaleCourir", gamepad = F.sprint.gamepad, text = "Courir" }
 		if carrying then
 			out.shove = { action = "RoyalePousser", gamepad = F.shove.gamepad, text = "Jeter" }
 			out.posture = { action = "RoyalePosture", gamepad = F.posture.gamepad, text = "Poser" }
 		else
-			out.shove = { action = "RoyalePousser", gamepad = F.shove.gamepad, text = "Pousser" }
+			if someoneInReach() then
+				out.shove =
+					{ action = "RoyalePousser", gamepad = F.shove.gamepad, text = "Pousser" }
+			end
 			out.posture =
 				{ action = "RoyalePosture", gamepad = F.posture.gamepad, text = "Accroupi" }
 		end

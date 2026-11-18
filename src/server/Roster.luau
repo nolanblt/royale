@@ -255,12 +255,17 @@ function Roster.take(actor: Actor)
 		local goal = root.CFrame
 			* CFrame.new(0, eye.suctionHeight, 0)
 			* CFrame.Angles(0, math.pi * 3, 0)
-		TweenService:Create(
+		local suction = TweenService:Create(
 			root,
 			TweenInfo.new(eye.suctionSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
 			{ CFrame = goal }
-		):Play()
+		)
+		suction:Play()
 		task.delay(eye.suctionSeconds, function()
+			-- La montee s'arrete avant de passer la main au Ventre : sa
+			-- derniere image pouvait ramener le corps dans le ciel apres qu'il
+			-- a ete pose dans la Fosse.
+			suction:Cancel()
 			if keeper and character.Parent and keeper(actor, character) then
 				return
 			end

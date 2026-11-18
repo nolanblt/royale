@@ -572,7 +572,9 @@ local function build()
 		local rubble = part(
 			"Gravat",
 			Vector3.new(s, s * 0.6, s * 1.2),
-			CFrame.new(ORIGIN + Vector3.new(math.cos(a) * d, s * 0.3, math.sin(a) * d))
+			-- A moitie enfonce : pose dessus, on aurait dit des caisses (vu a
+			-- l'image du salon).
+			CFrame.new(ORIGIN + Vector3.new(math.cos(a) * d, s * 0.05, math.sin(a) * d))
 				* CFrame.Angles(
 					random:NextNumber(-0.3, 0.3),
 					random:NextNumber(0, 6.3),
@@ -623,12 +625,18 @@ local function tutorial()
 			local socle = model.PrimaryPart :: BasePart
 			local facing = CFrame.lookAt(at, Vector3.new(ORIGIN.X, at.Y, ORIGIN.Z))
 			model:PivotTo(facing * socle.CFrame:ToObjectSpace(model:GetPivot()))
-			-- Une vitrine : rien n'y entre, et on ne s'y cogne pas.
+			-- Une vitrine : rien n'y entre, mais elle est aussi solide que la
+			-- vraie (traverser une voiture surprenait, vu par Josh) ; ce qui
+			-- ne bloque pas en partie (feuillage) ne bloque pas ici non plus.
 			for _, d in model:GetDescendants() do
 				if d:IsA("BasePart") then
 					d.Anchored = true
-					d.CanCollide = false
 					d.CanQuery = false
+					-- Une zone invisible du modele (entree, volume) ferait un mur
+					-- qu'on ne voit pas.
+					if d.Transparency >= 1 then
+						d.CanCollide = false
+					end
 				elseif d:IsA("ProximityPrompt") or d:IsA("Script") then
 					d:Destroy()
 				end
@@ -640,7 +648,12 @@ local function tutorial()
 			-- En studs : l'etiquette rapetisse avec la distance (en pixels,
 			-- elles se chevauchaient de loin, vu en image).
 			tag.Size = UDim2.fromScale(T.tagWidth, T.tagHeight)
-			tag.StudsOffset = Vector3.new(0, T.tagAbove, 0)
+			-- Au-dessus du haut de la cachette, mesure sur le modele pose.
+			local box, extent = model:GetBoundingBox()
+			local top = box.Position.Y + extent.Y / 2
+			tag.StudsOffsetWorldSpace =
+				Vector3.new(0, top - socle.Position.Y + T.tagGap + T.tagHeight / 2, 0)
+			tag.AlwaysOnTop = true
 			tag.LightInfluence = 0
 			tag.MaxDistance = T.tagDistance
 			tag.Adornee = socle

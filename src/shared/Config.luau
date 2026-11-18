@@ -92,22 +92,30 @@ Config.controls = {
 			-- a terre, voler un ennemi K.O., donner son objet a un ami debout,
 			-- tirer par les pieds quelqu'un d'allonge.
 			interact = { gamepad = "ButtonX", keyboard = "E" },
-			-- Frapper ; sur un abri : toquer ; sur un cocon : l'ouvrir.
+			-- Se servir de ce qu'on tient (comme tirer dans tous les jeux, et
+			-- l'outil tenu sur Roblox) : mains nues, frapper (sur un abri :
+			-- toquer ; sur un cocon : l'ouvrir) ; un objet, l'utiliser ; un
+			-- objet a lancer, le lancer.
 			hit = { gamepad = "ButtonR2", keyboard = "MouseButton1" },
 			-- A l'arret : pousser ; en courant : plaquer ; maintenu sur un
 			-- K.O. : le porter.
 			shove = { gamepad = "ButtonY", keyboard = "F" },
-			-- Utiliser l'objet choisi ; maintenu : viser, lacher pour lancer.
-			useItem = { gamepad = "ButtonL2", keyboard = "MouseButton2" },
+			-- Viser (maintenu) : l'arc d'un objet a lancer ; R2 lance (comme
+			-- viser puis tirer partout). Lacher sans lancer : on range l'arc.
+			aim = { gamepad = "ButtonL2", keyboard = "MouseButton2" },
+			-- Ce qu'on tient : les mains nues puis les 4 places, en boucle
+			-- (L1 / R1 comme le sac de Roblox a la manette).
 			previousItem = { gamepad = "ButtonL1", keyboard = "Q" },
 			nextItem = { gamepad = "ButtonR1", keyboard = "R" },
 			-- Bascule a la manette (L3 se tient mal en bougeant le stick, vu
 			-- dans Survivor), maintenu au clavier.
 			sprint = { gamepad = "ButtonL3", keyboard = "LeftShift" },
+			-- La croix comme dans les grands jeux en ligne : haut, le signal
+			-- (un appui « ici », deux appuis « danger ») ; bas, l'emote ;
+			-- gauche, la carte.
 			map = { gamepad = "DPadLeft", keyboard = "M" },
-			signalDanger = { gamepad = "DPadUp", keyboard = "Z" },
-			signalHere = { gamepad = "DPadDown", keyboard = "X" },
-			emote = { gamepad = "DPadRight", keyboard = "G" },
+			signal = { gamepad = "DPadUp", keyboard = "Z" },
+			emote = { gamepad = "DPadDown", keyboard = "G" },
 			-- La liste des joueurs du jeu (R3 etait garde en reserve ; Tab
 			-- comme partout sur Roblox).
 			playerList = { gamepad = "ButtonR3", keyboard = "Tab" },
@@ -149,12 +157,14 @@ Config.controls = {
 		-- Dans un abri ferme (voiture, armoire, frigo, poubelle).
 		hidden = {
 			leave = { gamepad = "ButtonX", keyboard = "E" },
+			-- Dans un egout : la plaque ou ressortir (X y mene).
+			previousExit = { gamepad = "DPadLeft", keyboard = "Left" },
+			nextExit = { gamepad = "DPadRight", keyboard = "Right" },
 			-- La porte dans la figure de celui qui ouvre.
 			burstOut = { gamepad = "ButtonR2", keyboard = "MouseButton1" },
 			previousItem = { gamepad = "ButtonL1", keyboard = "Q" },
 			nextItem = { gamepad = "ButtonR1", keyboard = "R" },
-			signalDanger = { gamepad = "DPadUp", keyboard = "Z" },
-			signalHere = { gamepad = "DPadDown", keyboard = "X" },
+			signal = { gamepad = "DPadUp", keyboard = "Z" },
 		},
 		-- Au goulag, en duel sur sa plateforme.
 		gulag = {
@@ -182,13 +192,14 @@ Config.controls = {
 Config.touch = {
 	layout = {
 		hit = { angle = 180, ring = 1.3, size = 1 },
-		useItem = { angle = 128, ring = 1.3, size = 0.8 },
-		shove = { angle = 82, ring = 1.25, size = 0.7 },
-		posture = { angle = 163, ring = 2.35, size = 0.7 },
-		sprint = { angle = 140, ring = 2.35, size = 0.65 },
-		previousItem = { angle = 118, ring = 2.4, size = 0.55 },
-		nextItem = { angle = 99, ring = 2.35, size = 0.55 },
+		posture = { angle = 128, ring = 1.35, size = 0.75 },
+		sprint = { angle = 88, ring = 1.3, size = 0.7 },
+		-- Pousser n'apparait que si quelqu'un est a portee devant soi.
+		shove = { angle = 158, ring = 2.4, size = 0.7 },
 	},
+	-- Pousser se montre des que quelqu'un est a moins de tant de studs :
+	-- un peu plus que la portee du coup, le temps d'y poser le pouce.
+	shoveShowRange = 9,
 	-- Sans bouton de saut trouve (pas encore cree) : sa taille et la place de
 	-- son centre depuis le coin bas droit (pixels), celles de Roblox sur un
 	-- telephone.
@@ -270,6 +281,11 @@ Config.world = {
 Config.match = {
 	-- Le depart : on vise depuis la pupille, puis l'Oeil crache tout le monde.
 	aimSeconds = 8,
+	-- Pendant la visee et la chute, Roblox charge la carte autour du centre
+	-- de la zone, pas autour du personnage (StreamingEnabled : vu de la
+	-- pupille, la carte n'etait pas encore la, on visait dans le vide). On
+	-- demande ce chargement avant la visee, au plus ce temps (s).
+	streamSeconds = 3,
 	-- La vitesse de la comete (studs/s) : de la pupille (~600 de haut) au
 	-- sol en 3 a 5 s, assez vite pour que ce soit une attaque, assez lent pour
 	-- voir les autres filer.
@@ -683,10 +699,59 @@ Config.hiding = {
 	-- L'invite : son texte, par sorte de cachette.
 	defaultAction = "Se cacher",
 	actionText = { Egout = "Descendre dans l'égout" },
-	-- Les egouts : sous chaque plaque de la carte (`coverName`), a `depth`
-	-- studs ; on ressort par une autre plaque a moins de `range` studs, dans
-	-- la direction regardee (au moins `minDot` d'alignement).
-	sewer = { name = "Egout", coverName = "PlaqueEgout", depth = 6, range = 160, minDot = 0.3 },
+	-- Les egouts (refaits avec Josh le 16 novembre 2026 : « on est juste sous
+	-- la map, il se passe rien ») : sous chaque plaque (`coverName`), une
+	-- vraie salle (`room`, studs : assez petite pour ne pas toucher celle de
+	-- la plaque voisine, a 13 studs au plus pres). Dedans, on voit les
+	-- plaques a moins de `range` studs, on choisit la sienne a la croix, et
+	-- X y mene : on rampe dans le noir a `travelSpeed` studs/s, entre
+	-- `travelMin` et `travelMax` s, toujours cache. Sans choix (un bot), on
+	-- ressort par la meme plaque.
+	sewer = {
+		name = "Egout",
+		coverName = "PlaqueEgout",
+		range = 160,
+		-- Le plafond a 6 studs sous la plaque : le terrain creuse autour de la
+		-- salle n'entame plus la couche du dessus (a 1,2, des trous au bord des
+		-- routes, mesures au rayon) ; un puits etroit de briques y descend.
+		room = { width = 10, length = 10, height = 8, ceilingBelow = 6 },
+		-- Le haut du puits, juste sous la plaque (studs).
+		shaftTopBelow = 0.4,
+		-- Le centre du personnage au-dessus du sol de la salle.
+		standHeight = 3,
+		-- Le trou du plafond sous la plaque (studs), la lumiere qui en tombe
+		-- (eclat, angle en degres), et le dossier des salles (sous Carte).
+		hole = 3,
+		-- Le terrain se creuse d'autant plus large que la salle (une case de
+		-- terrain fait 4 studs ; murs compris).
+		carveMargin = 8,
+		grateBrightness = 2,
+		grateAngle = 50,
+		roomsFolder = "SallesEgout",
+		travelSpeed = 45,
+		travelMin = 1.5,
+		travelMax = 4,
+		-- L'arrivee prevue du trajet (heure du serveur), sur le joueur.
+		travelAttribute = "EgoutTrajet",
+		-- Les couleurs de la salle : briques, sol, eau, lumiere de la grille et
+		-- lampe de chantier.
+		brick = { 92, 58, 46 },
+		floor = { 52, 50, 48 },
+		water = { 60, 90, 70 },
+		grateLight = { 190, 210, 230 },
+		lamp = { 255, 170, 90 },
+		lampRange = 14,
+		lampBrightness = 1.2,
+		-- Les reperes des autres plaques, vus a travers le sol (pixels).
+		markerSize = 120,
+		markerColor = { 200, 200, 200 },
+		chosenColor = { 255, 196, 110 },
+		-- L'aide a l'ecran et le texte du trajet (pixels), et le fondu au noir
+		-- du trajet (s).
+		hintTextSize = 22,
+		crawlTextSize = 28,
+		fadeSeconds = 0.4,
+	},
 	-- Les cachettes a mecanique (CONCEPT.md) :
 	-- un buisson, des roseaux couvrent a moitie : l'Oeil y voit cette part
 	-- (la jauge monte, lentement, si un faisceau reste dessus) ;
@@ -700,6 +765,11 @@ Config.hiding = {
 	promptDistance = 7,
 	-- L'attribut d'un joueur cache : le nom de sa cachette.
 	hiddenAttribute = "Cache",
+	-- Vrai sur qui est cache dans un abri ferme (une place, hors egout) : la
+	-- camera passe a la premiere personne le temps d'y etre, pour voir
+	-- dehors par les fentes et les vitres (a la troisieme personne, elle se
+	-- collait dans la boite : du noir).
+	closedAttribute = "CacheFerme",
 	-- Une cachette arrachee : ses morceaux s'envolent ce temps (s) avant de
 	-- disparaitre, a la vue de tous.
 	ripSeconds = 3,
@@ -718,6 +788,19 @@ Config.hiding = {
 --------------------------------------------------------------------------------
 -- LE CORPS — marcher, courir, s'accroupir (CONCEPT.md, Les boutons)
 --------------------------------------------------------------------------------
+
+-- La camera a la troisieme personne (choisi avec Josh le 16 novembre 2026 :
+-- « on voit pas bien ce qu'on fait », et c'est le standard de Roblox). Le
+-- recul se borne : assez pour voir autour de soi, pas assez pour regarder
+-- par-dessus un toit sans s'y montrer (studs).
+Config.camera = {
+	minZoom = 7,
+	maxZoom = 16,
+	-- Frapper, pousser, lancer : le personnage se tourne d'abord vers ou
+	-- regarde la camera (sinon il frappe dans le sens de sa marche, pas vers
+	-- ce qu'on vise).
+	faceOnAction = true,
+}
 
 Config.movement = {
 	-- Les reperes de Survivor : la marche et la course.
@@ -764,6 +847,104 @@ Config.postures = {
 	stillSpeed = 1,
 	fadeSeconds = 0.2,
 	refreshSeconds = 0.1,
+}
+
+-- Les gestes (choisi avec Josh le 16 novembre 2026 : « quand on tape
+-- quelqu'un il ne se passe rien », « des animations pour chaque objet »).
+-- Generes par generate_animation (docs/ASSETS.md) ; chacun est long et
+-- lent, on n'en joue que le passage utile, mesure en partie sur un
+-- mannequin : de `from` a `to` (s), a la vitesse `speed`.
+Config.actionAnims = {
+	-- Le poing part a 0,6 s ; garde avant, retour apres.
+	punch = { id = 96801437647133, from = 0.3, to = 0.9, speed = 1.8 },
+	-- Elan de 0,3 a 0,75 s, la batte balaie devant de 0,75 a 1,35 s.
+	bat = { id = 109450619038823, from = 0.3, to = 1.5, speed = 1.8 },
+	-- Le bras arme derriere (0,75 a 1,65 s), lache vers 1,9 s.
+	throw = { id = 104136587196042, from = 0.75, to = 2.4, speed = 2 },
+	-- Les deux bras tendus devant, tenus tout le clip : on n'en prend que le
+	-- debut, ils partent du repos vers l'avant d'un coup. (La premiere
+	-- poussee generee ne faisait que lever les mains aux epaules, comme les
+	-- jumelles : vu a l'image.)
+	shove = { id = 136968998510594, from = 0.2, to = 0.75, speed = 1 },
+	-- A genoux, les mains au sol (3 a 6,2 s) : poser un piege, une craie.
+	place = { id = 86760954677122, from = 3, to = 6.2, speed = 2.2 },
+	-- Les deux mains aux yeux (0,5 a 2,3 s) : jumelles, Oeil de verre.
+	raise = { id = 104079954938243, from = 0.15, to = 2.3, speed = 1.6 },
+	-- La main levee devant la poitrine (1 a 2,4 s) : les autres objets.
+	use = { id = 137776254622053, from = 0.75, to = 2.4, speed = 1.8 },
+	-- La tete part en arriere (0,9 a 2,2 s) : on vient d'etre frappe.
+	flinch = { id = 99409052245761, from = 0.9, to = 2.2, speed = 2.2 },
+	fadeSeconds = 0.08,
+	-- Le geste de chaque sorte d'objet, puis les exceptions.
+	byKind = { throw = "throw", spot = "place", use = "use" },
+	byItem = { binoculars = "raise", glassEye = "raise", fakeBox = "place", dummy = "place" },
+}
+
+-- L'objet tenu, en main (HeldService, dessins dans ItemShapes) : penche de
+-- tant de degres vers l'avant depuis le poing. Le haut de la main remonte
+-- le long du bras : droit, l'objet entrait dans l'avant-bras et ne se
+-- voyait pas (mesure en partie le 16 novembre 2026) ; a -75, il sort du
+-- poing vers l'avant, comme les outils de Roblox. Sauf ceux qui se
+-- tiennent autrement : la batte prete a frapper (comme BatService) ; la
+-- lampe, les jumelles, l'oeil et le miroir, deja dessines tournes vers
+-- l'avant. Le sac change vite : on le relit a ce rythme (s).
+Config.heldItems = {
+	tilt = -75,
+	tilts = { bat = -45, torch = 0, binoculars = 0, glassEye = 0, mirror = -30, planks = -60 },
+	refreshSeconds = 0.15,
+	-- En vol, un objet lance tourne sur lui-meme (tours par seconde).
+	spin = 1.5,
+	-- Le mannequin pose : le petit mannequin de bois (1,33 stud) a cette
+	-- echelle, environ la taille d'un joueur.
+	dummyScale = 4,
+}
+
+-- Ce qu'on pose sur une cachette (ItemService) : devant sa premiere
+-- sortie, a cette hauteur, a cette echelle ; la croix de craie (studs) ;
+-- la croix et la clochette restent ce temps (s), les planches et le
+-- cadenas le temps de leur effet.
+Config.spotItems = {
+	height = 2.5,
+	scale = 1.6,
+	chalkWidth = 0.25,
+	chalkLength = 2.2,
+	markSeconds = 90,
+}
+
+-- Les objets lances, une fois tombes (ItemService) : le petard et les
+-- fusees poses au sol a cette echelle et cette hauteur (studs) ; la
+-- bouteille en eclats (nombre, vitesse, duree) ; le filet en cage de cordes
+-- sur qui le recoit (cordes, rayon, hauteur, et de combien il descend sous
+-- le centre du corps).
+Config.landedItems = {
+	scale = 1.6,
+	lift = 0.3,
+	shards = 8,
+	shardSpeed = 14,
+	shardSeconds = 2.5,
+	netRopes = 8,
+	netRadius = 2.2,
+	netHeight = 5.5,
+	netBelow = 3,
+}
+
+-- Un coup qui porte se voit et se sent : la cible clignote, l'attaquant
+-- voit une marque au centre, la cible un voile rouge, les deux un petit
+-- tremblement (secondes, couleurs, studs).
+Config.impact = {
+	flashSeconds = 0.18,
+	flashColor = { 255, 60, 40 },
+	markerSeconds = 0.25,
+	vignetteSeconds = 0.35,
+	vignetteOpacity = 0.45,
+	shakeSeconds = 0.2,
+	shakeStuds = 0.35,
+	-- Les eclats a l'impact.
+	sparks = 10,
+	-- La croix de l'attaquant (pixels), et l'ecran au-dessus du jeu, sous
+	-- les panneaux.
+	markerSize = 34,
+	displayOrder = 2,
 }
 
 --------------------------------------------------------------------------------
@@ -902,11 +1083,33 @@ Config.loot = {
 	folder = "ObjetsDeLaPartie",
 }
 
+-- Les meubles a fouiller se voient (LootGlow ; Josh, le 16 novembre 2026) :
+-- les `max` plus proches a moins de `radius` studs, pas encore fouilles. En
+-- dessous de la limite de Roblox (31 contours a la fois), avec de la marge
+-- pour les autres (reveles, coups).
+Config.lootGlow = {
+	radius = 45,
+	max = 12,
+	refreshSeconds = 0.4,
+	color = { 255, 196, 110 },
+	fillTransparency = 0.88,
+	outlineTransparency = 0.25,
+	-- Le contour respire : sa transparence monte de tant, a cette vitesse.
+	pulseDepth = 0.5,
+	pulseSpeed = 3,
+	dustSize = 0.18,
+	dustRate = 3,
+}
+
 Config.bag = {
 	-- 4 places (CONCEPT.md) : on choisit ce qu'on garde.
 	slots = 4,
+	-- La place « mains nues », avant les 4 du sac : on y frappe. On y est en
+	-- arrivant, et ramasser n'y change rien (on ne se retrouve pas a lancer
+	-- un objet en voulant frapper).
+	hands = 0,
 	-- Attributs du participant : le contenu (ids separes par des virgules,
-	-- vide pour une place libre) et la place choisie (1 a 4).
+	-- vide pour une place libre) et la place choisie (0 a 4).
 	attribute = "Sac",
 	selectedAttribute = "SacChoix",
 	-- L2 ne repart pas avant ce temps (s) : un double appui ne gaspille pas
@@ -1184,6 +1387,9 @@ Config.items = {
 		seconds = 10,
 		distance = 4,
 		shield = 10,
+		-- Son pied (ItemShapes) descend a 0,3 sous la prise : on la remonte
+		-- d'autant pour le poser au sol.
+		standHeight = 0.3,
 	},
 	glassEye = {
 		name = "Œil de verre",
@@ -1491,15 +1697,62 @@ Config.goulag = {
 		launchSpeed = 70,
 		launchLift = 30,
 	},
-	-- Les cages : au centre, sur un pilier, d'ou l'on voit les duels. Assez
-	-- espacees pour qu'on voie entre elles (a 22 de rayon, 24 cages se
-	-- touchaient, vu en image).
-	cages = 24,
-	cageRadius = 32,
-	cageSize = 6,
+	-- La Fosse, au centre (16 novembre 2026, a la place des cages etroites aux
+	-- murs invisibles) : une plateforme ronde ou l'on attend libre, fermee par
+	-- un rideau d'energie qu'on voit (ForceField), aussi haut qu'un saut ne le
+	-- passe pas. Chacun y arrive a sa place, sur deux cercles (parts du
+	-- rayon), tourne vers les duels.
+	stand = {
+		radius = 38,
+		segments = 64,
+		curtainHeight = 12,
+		curtainTransparency = 0.25,
+		barEvery = 4,
+		braziers = 6,
+		spreadAngle = 0.55,
+		spreadInner = 0.4,
+		spreadOuter = 0.65,
+	},
+	-- La lumiere du Ventre : on doit voir ou l'on est, ou l'on se bat, et
+	-- celui d'en face (avant : le noir). Plateforme au repos a demi
+	-- effacee, braise eteinte ; en duel, pleine, la braise allumee et un
+	-- projecteur au-dessus.
+	look = {
+		idleTransparency = 0.55,
+		idleRimBrightness = 0.3,
+		rimRange = 40,
+		rimBrightness = 3,
+		spotHeight = 45,
+		spotBrightness = 4,
+		spotAngle = 40,
+		brazierRange = 34,
+		brazierBrightness = 2.5,
+		fillLights = 6,
+		fillRange = 60,
+		fillBrightness = 1.2,
+		irisBrightness = 3,
+	},
 	-- La salle qui enferme le Ventre : demi-largeur, profondeur sous les
 	-- plateformes, hauteur au-dessus, et le nombre de veines de braise.
 	room = { half = 170, below = 140, above = 70, veins = 18 },
+	-- Ce que voit le joueur au Ventre (VentreView) : la brume de la carte y
+	-- noyait tout ; une lumiere rouge sourde, et l'adversaire du duel cerne
+	-- de rouge vif a travers tout (jusqu'a `foeRange` studs : une plateforme).
+	view = {
+		ambient = { 90, 40, 36 },
+		outdoorAmbient = { 120, 56, 48 },
+		exposure = 0.4,
+		atmosphereDensity = 0.12,
+		atmosphereColor = { 80, 30, 28 },
+		brightness = 0.04,
+		contrast = 0.12,
+		saturation = 0.05,
+		tint = { 255, 236, 228 },
+		foeColor = { 255, 60, 40 },
+		foeOutline = { 255, 230, 200 },
+		foeFill = 0.75,
+		foeRange = 30,
+	},
 	-- Le bot de la manche impaire : il vise, frappe, et pousse vers le bord.
 	botThinkSeconds = 0.15,
 	botName = "Repris du Ventre",
@@ -1522,6 +1775,9 @@ Config.goulag = {
 		rim = { 200, 30, 20 },
 		cage = { 255, 60, 30 },
 		ember = { 255, 110, 50 },
+		iron = { 46, 40, 40 },
+		spot = { 255, 210, 180 },
+		fill = { 200, 70, 50 },
 	},
 }
 
@@ -1806,10 +2062,13 @@ Config.lobby = {
 		radius = 50,
 		arcStart = 200,
 		arcStep = 17,
-		-- L'etiquette, en studs.
+		-- L'etiquette, en studs : posee a cet ecart au-dessus du HAUT de la
+		-- cachette, et devant tout. A hauteur fixe depuis le socle, elle
+		-- tombait dans les grandes (casiers, bennes) et s'y cachait (vu par
+		-- Josh au telephone).
 		tagWidth = 9,
 		tagHeight = 3,
-		tagAbove = 7,
+		tagGap = 1.5,
 		tagDistance = 60,
 		-- Les cachettes en vitrine sautent cet angle (degres, de chaque cote)
 		-- devant le classement : « Caisses » le cachait (vu en image).
@@ -1853,7 +2112,7 @@ Config.lobby = {
 				text = "Les meubles cachent de quoi survivre.",
 				buttons = {
 					{ "onFoot", "interact", "maintenu" },
-					{ "onFoot", "useItem", "utiliser" },
+					{ "onFoot", "hit", "utiliser" },
 				},
 			},
 			{
@@ -4571,6 +4830,10 @@ Config.shop = {
 		-- cette taille a l'achat.
 		selectSeconds = 0.12,
 		popFrom = 0.85,
+		-- Le bandeau des reponses (tirage, achat, ce qui manque) : sa hauteur
+		-- (pixels) et le temps qu'il reste (s), assez pour lire le nom gagne.
+		noticeHeight = 40,
+		noticeSeconds = 4,
 		card = { 38, 29, 25 },
 		cardSelected = { 70, 44, 24 },
 		owned = { 140, 220, 120 },
@@ -4826,16 +5089,33 @@ Config.view = {
 	-- Il glisse vers sa position publiee (fraction par seconde) : le serveur
 	-- n'en envoie que dix par seconde.
 	beamSmoothing = 10,
-	-- Le mur du cercle : des panneaux rouges translucides, assez hauts pour se
-	-- voir de loin par-dessus les toits.
-	wallSegments = 96,
+	-- Les lignes de texte de l'ecran de jeu ne prennent jamais plus que cette
+	-- part de la largeur de l'ecran (et au plus leur largeur en pixels).
+	hudWidthShare = 0.92,
+	-- Le mur du cercle (refait le 16 novembre 2026 : Josh trouvait laids les
+	-- « piquets ») : un rideau d'energie rouge qui miroite (matiere
+	-- ForceField, comme les murs de tempete des autres jeux), au sommet
+	-- droit (chaque panneau monte au meme haut, plus de marches), assez
+	-- haut pour se voir de loin par-dessus les toits ; une ligne de braise
+	-- a son pied.
+	wallSegments = 128,
 	wallHeight = 160,
-	wallColor = { 200, 30, 24 },
-	wallTransparency = 0.7,
-	-- Le prochain cercle : un trait blanc au sol.
+	wallColor = { 220, 36, 28 },
+	wallTransparency = 0.15,
+	wallMaterial = "ForceField",
+	-- Sous le sol, le rideau descend d'autant (un creux ne laisse pas voir
+	-- son bas).
+	wallSink = 40,
+	wallBaseColor = { 255, 70, 40 },
+	wallBaseWidth = 1.2,
+	wallBaseTransparency = 0.2,
+	-- Le prochain cercle : une ligne blanche couchee au sol, qui suit les
+	-- collines (avant : de petits panneaux debout, une palissade).
 	nextColor = { 240, 240, 240 },
-	nextHeight = 3,
-	nextTransparency = 0.35,
+	nextWidth = 1.4,
+	nextTransparency = 0.25,
+	-- Les deux lignes flottent a peine au-dessus du sol (studs).
+	lineLift = 0.15,
 	-- Le ciel rougit quand l'Oeil s'ouvre.
 	openTint = { 255, 205, 195 },
 	warningTint = { 255, 225, 215 },
@@ -4845,6 +5125,9 @@ Config.view = {
 	-- Vue de la pupille, les nuages et la brume noient la carte (vu en jeu) :
 	-- le temps de viser, on les ecarte chez soi.
 	aimAtmosphereDensity = 0.15,
+	-- ... et le voile de hauteur (la place en met 2,2 : vue de 570 studs, la
+	-- ville n'etait qu'un brouillard bleu).
+	aimHaze = 0,
 	-- Le stick ne bouge rien sous ce seuil (une manette au repos derive).
 	stickDeadZone = 0.15,
 	-- En spectateur, la camera se tient derriere et au-dessus (studs).
@@ -4918,6 +5201,8 @@ Config.remotes = {
 	item = "Objet",
 	-- Le serveur montre un lancer a tous (depart, vitesse, objet).
 	projectile = "Projectile",
+	-- Un coup qui porte, montre a tous : (cible, attaquant, K.O.).
+	impact = "Impact",
 	-- Le Regard vole : le point vise (x, z).
 	steer = "Pilote",
 	-- Un signal a ses coequipiers : (sorte, position). Le serveur le renvoie
@@ -4940,9 +5225,13 @@ Config.remotes = {
 --------------------------------------------------------------------------------
 
 Config.signals = {
-	-- Croix haut et bas : « Danger ! » et « Ici ! », la ou l'on regarde,
-	-- vus par ses coequipiers a travers les murs.
+	-- Croix haut : « Ici ! », et un second appui rapide le change en
+	-- « Danger ! », la ou l'on regarde, vus par ses coequipiers a travers les
+	-- murs.
 	seconds = 6,
+	-- Le second appui compte comme double s'il vient dans ce temps (s) :
+	-- celui d'un double clic ordinaire.
+	doubleTapSeconds = 0.4,
 	-- Au plus loin (studs) : au-dela, le regard ne touche rien de precis.
 	range = 400,
 	-- Un signal par personne et par seconde au plus.

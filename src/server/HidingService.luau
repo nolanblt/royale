@@ -64,6 +64,236 @@ local placed: Folder? = nil
 -- Les emplacements deja occupes cette partie (on n'y pose pas deux fois).
 local usedAnchors: { [BasePart]: boolean } = {}
 local random = Random.new()
+-- Les egouts en route (on rampe vers une autre plaque) : on ne repart pas.
+local traveling: { [Roster.Actor]: boolean } = {}
+-- Les salles deja construites sous les plaques (une fois par serveur).
+local rooms: { [BasePart]: boolean } = {}
+
+local function rgb(c: { number }): Color3
+	return Color3.fromRGB(c[1], c[2], c[3])
+end
+
+local function roomPart(
+	parent: Instance,
+	name: string,
+	size: Vector3,
+	cf: CFrame,
+	color: Color3,
+	material: Enum.Material
+): Part
+	local p = Instance.new("Part")
+	p.Name = name
+	p.Anchored = true
+	p.Size = size
+	p.CFrame = cf
+	p.Color = color
+	p.Material = material
+	p.CanTouch = false
+	p.Parent = parent
+	return p
+end
+
+-- La salle sous une plaque d'egout (CONCEPT.md : « etroit ») : murs de
+-- briques, sol et rigole d'eau, echelle, tuyaux, gouttes, la lumiere froide
+-- qui tombe de la grille et une lampe de chantier. Le terrain y est creuse.
+-- Rend le point ou l'on se tient.
+local function buildSewerRoom(cover: BasePart, folder: Instance): CFrame
+	local S = H.sewer
+	local R = S.room
+	local top = cover.Position
+	local ceilingY = top.Y - R.ceilingBelow
+	local floorY = ceilingY - R.height
+	local center = Vector3.new(top.X, floorY + R.height / 2, top.Z)
+	local stand = CFrame.new(top.X, floorY + S.standHeight, top.Z)
+	if rooms[cover] then
+		return stand
+	end
+	rooms[cover] = true
+	local w, l, h = R.width, R.length, R.height
+	-- Le terrain se range par cases de 4 studs : creuse au plus juste, ses
+	-- bords recouvraient les murs de briques (vu a l'image, de l'herbe aux
+	-- murs). On creuse plus large que la salle, murs compris ; la salle est
+	-- assez bas pour que ce creusement n'entame pas la couche du dessus (a 1
+	-- stud sous la route, il ouvrait des trous au bord : mesure au rayon).
+	workspace.Terrain:FillBlock(
+		CFrame.new(center),
+		Vector3.new(w + S.carveMargin, h, l + S.carveMargin),
+		Enum.Material.Air
+	)
+	-- Le puits, de la plaque au plafond : etroit, sous la route seulement.
+	local shaftTop = top.Y - S.shaftTopBelow
+	local shaftHeight = shaftTop - ceilingY
+	workspace.Terrain:FillBlock(
+		CFrame.new(top.X, ceilingY + shaftHeight / 2, top.Z),
+		Vector3.new(S.hole, shaftHeight, S.hole),
+		Enum.Material.Air
+	)
+	local room = Instance.new("Model")
+	room.Name = "SalleEgout"
+	local brick, floorColor = rgb(S.brick), rgb(S.floor)
+	local rust = Color3.fromRGB(90, 70, 50)
+	for _, side in { -1, 1 } do
+		roomPart(
+			room,
+			"Puits",
+			Vector3.new(0.4, shaftHeight, S.hole + 0.8),
+			CFrame.new(top.X + side * (S.hole / 2 + 0.2), ceilingY + shaftHeight / 2, top.Z),
+			brick,
+			Enum.Material.Brick
+		)
+		roomPart(
+			room,
+			"Puits",
+			Vector3.new(S.hole, shaftHeight, 0.4),
+			CFrame.new(top.X, ceilingY + shaftHeight / 2, top.Z + side * (S.hole / 2 + 0.2)),
+			brick,
+			Enum.Material.Brick
+		)
+	end
+	roomPart(
+		room,
+		"Sol",
+		Vector3.new(w, 1, l),
+		CFrame.new(top.X, floorY - 0.5, top.Z),
+		floorColor,
+		Enum.Material.Slate
+	)
+	local water = roomPart(
+		room,
+		"Eau",
+		Vector3.new(2.4, 0.2, l),
+		CFrame.new(top.X, floorY + 0.05, top.Z),
+		rgb(S.water),
+		Enum.Material.Glass
+	)
+	water.Transparency = 0.25
+	water.Reflectance = 0.3
+	water.CanCollide = false
+	for _, side in { -1, 1 } do
+		roomPart(
+			room,
+			"Mur",
+			Vector3.new(1, h, l + 2),
+			CFrame.new(top.X + side * (w / 2 + 0.5), center.Y, top.Z),
+			brick,
+			Enum.Material.Brick
+		)
+		roomPart(
+			room,
+			"Mur",
+			Vector3.new(w, h, 1),
+			CFrame.new(top.X, center.Y, top.Z + side * (l / 2 + 0.5)),
+			brick,
+			Enum.Material.Brick
+		)
+	end
+	-- Le plafond, perce sous la plaque : quatre dalles autour du trou.
+	local hole = S.hole
+	local band = (w - hole) / 2
+	for _, side in { -1, 1 } do
+		roomPart(
+			room,
+			"Plafond",
+			Vector3.new(band, 1, l),
+			CFrame.new(top.X + side * (hole / 2 + band / 2), ceilingY + 0.5, top.Z),
+			floorColor,
+			Enum.Material.Concrete
+		)
+		roomPart(
+			room,
+			"Plafond",
+			Vector3.new(hole, 1, (l - hole) / 2),
+			CFrame.new(top.X, ceilingY + 0.5, top.Z + side * (hole / 2 + (l - hole) / 4)),
+			floorColor,
+			Enum.Material.Concrete
+		)
+	end
+	-- La grille, et la lumiere froide du dehors qui tombe par elle.
+	local grate = roomPart(
+		room,
+		"Grille",
+		Vector3.new(hole, 0.2, hole),
+		CFrame.new(top.X, shaftTop - 0.1, top.Z),
+		Color3.fromRGB(40, 40, 42),
+		Enum.Material.DiamondPlate
+	)
+	grate.Transparency = 0.35
+	grate.CanCollide = false
+	local daylight = Instance.new("SpotLight")
+	daylight.Face = Enum.NormalId.Bottom
+	daylight.Color = rgb(S.grateLight)
+	daylight.Brightness = S.grateBrightness
+	daylight.Range = h + shaftHeight + 4
+	daylight.Angle = S.grateAngle
+	daylight.Parent = grate
+	-- L'echelle, du sol jusqu'en haut du puits, contre sa paroi.
+	local ladderX = top.X + hole / 2 - 0.35
+	local ladderHeight = shaftTop - floorY
+	for _, side in { -0.6, 0.6 } do
+		roomPart(
+			room,
+			"Montant",
+			Vector3.new(0.2, ladderHeight, 0.2),
+			CFrame.new(ladderX, floorY + ladderHeight / 2, top.Z + side),
+			rust,
+			Enum.Material.CorrodedMetal
+		).CanCollide =
+			false
+	end
+	for i = 1, math.floor(ladderHeight) - 1 do
+		roomPart(
+			room,
+			"Barreau",
+			Vector3.new(0.15, 0.15, 1.2),
+			CFrame.new(ladderX, floorY + i, top.Z),
+			rust,
+			Enum.Material.CorrodedMetal
+		).CanCollide =
+			false
+	end
+	-- Deux tuyaux le long des murs, sous le plafond.
+	for _, side in { -1, 1 } do
+		local pipe = roomPart(
+			room,
+			"Tuyau",
+			Vector3.new(l, 0.7, 0.7),
+			CFrame.new(top.X + side * (w / 2 - 0.6), ceilingY - 0.8, top.Z)
+				* CFrame.Angles(0, math.pi / 2, 0),
+			Color3.fromRGB(70, 74, 70),
+			Enum.Material.Metal
+		)
+		pipe.Shape = Enum.PartType.Cylinder
+		pipe.CanCollide = false
+	end
+	-- La lampe de chantier, au mur du fond.
+	local lamp = roomPart(
+		room,
+		"Lampe",
+		Vector3.new(0.5, 0.7, 0.5),
+		CFrame.new(top.X, floorY + h * 0.7, top.Z - l / 2 + 0.3),
+		rgb(S.lamp),
+		Enum.Material.Neon
+	)
+	lamp.CanCollide = false
+	local glow = Instance.new("PointLight")
+	glow.Color = rgb(S.lamp)
+	glow.Range = S.lampRange
+	glow.Brightness = S.lampBrightness
+	glow.Shadows = true
+	glow.Parent = lamp
+	-- Des gouttes qui tombent du plafond dans l'eau.
+	local drips = Instance.new("ParticleEmitter")
+	drips.Color = ColorSequence.new(rgb(S.water))
+	drips.Size = NumberSequence.new(0.08)
+	drips.Lifetime = NumberRange.new(1, 1.4)
+	drips.Rate = 3
+	drips.Speed = NumberRange.new(0)
+	drips.Acceleration = Vector3.new(0, -workspace.Gravity / 6, 0)
+	drips.EmissionDirection = Enum.NormalId.Bottom
+	drips.Parent = grate
+	room.Parent = folder
+	return stand
+end
 -- Le numero de la derniere ouverture de l'Oeil (tenu par EyeService).
 local burstSerial = 0
 local enterCallbacks: { (Roster.Actor, Spot) -> () } = {}
@@ -127,6 +357,7 @@ local function release(player: Roster.Actor, spot: Spot, grace: boolean, awayFro
 	end
 	spot.prompt.Enabled = not spot.ripping and #spot.occupants < spot.capacity
 	player:SetAttribute(H.hiddenAttribute, nil)
+	player:SetAttribute(H.closedAttribute, nil)
 	local root = Roster.rootOf(player)
 	if root then
 		-- Delogee, on sort par le cote oppose a celui qui pousse (la voiture
@@ -191,6 +422,10 @@ local function enter(player: Roster.Actor, spot: Spot)
 	spot.prompt.Enabled = #spot.occupants < spot.capacity
 	byPlayer[player] = spot
 	player:SetAttribute(H.hiddenAttribute, displayName(spot.model))
+	player:SetAttribute(
+		H.closedAttribute,
+		if spot.capacity <= 1 and spot.kind ~= H.sewer.name then true else nil
+	)
 	root.Anchored = true
 	root.CFrame = seat(spot, #spot.occupants)
 	for _, callback in enterCallbacks do
@@ -350,6 +585,13 @@ function HidingService.setup(players: number)
 			local model = Instance.new("Model")
 			model.Name = H.sewer.name
 			local top = part.Position
+			local roomsFolder = root:FindFirstChild(H.sewer.roomsFolder)
+			if roomsFolder == nil then
+				local f = Instance.new("Folder")
+				f.Name = H.sewer.roomsFolder
+				f.Parent = root
+				roomsFolder = f
+			end
 			local inside = Instance.new("Part")
 			inside.Name = W.inside
 			inside.Size = Vector3.one * 2
@@ -357,7 +599,7 @@ function HidingService.setup(players: number)
 			inside.CanCollide = false
 			inside.CanQuery = false
 			inside.Transparency = 1
-			inside.CFrame = CFrame.new(top - Vector3.new(0, H.sewer.depth, 0))
+			inside.CFrame = buildSewerRoom(part, roomsFolder :: Instance)
 			inside.Parent = model
 			local exit = Instance.new("Part")
 			exit.Name = W.exit
@@ -465,58 +707,61 @@ function HidingService.isHidden(player: Roster.Actor): boolean
 	return byPlayer[player] ~= nil
 end
 
--- La plaque ou ressortir d'un egout : la plus proche dans la direction
--- regardee (`look`), a portee ; sans direction, une voisine au hasard.
-local function sewerExit(from: Spot, look: Vector3?): Spot?
-	local here = from.inside.Position
-	local best, bestScore = nil, -math.huge
+-- La plaque choisie pour ressortir d'un egout (le modele envoye par le
+-- client) : un autre egout, debout, a portee. Sinon rien (on ressort ici).
+local function sewerExit(from: Spot, chosen: Instance?): Spot?
+	if chosen == nil or chosen == from.model then
+		return nil
+	end
 	for _, spot in spots do
-		if spot == from or spot.kind ~= H.sewer.name or spot.ripping then
-			continue
-		end
-		local delta =
-			Vector3.new(spot.inside.Position.X - here.X, 0, spot.inside.Position.Z - here.Z)
-		local d = delta.Magnitude
-		if d <= 0 or d > H.sewer.range then
-			continue
-		end
-		local score
-		if look then
-			local flat = Vector3.new(look.X, 0, look.Z)
-			local dot = if flat.Magnitude > 0 then flat.Unit:Dot(delta.Unit) else 0
-			if dot < H.sewer.minDot then
-				continue
-			end
-			-- Dans l'axe d'abord, puis la plus proche.
-			score = dot * H.sewer.range - d
-		else
-			score = random:NextNumber()
-		end
-		if score > bestScore then
-			best, bestScore = spot, score
+		if spot.model == chosen and spot.kind == H.sewer.name and not spot.ripping then
+			local delta = spot.inside.Position - from.inside.Position
+			local d = Vector3.new(delta.X, 0, delta.Z).Magnitude
+			return if d <= H.sewer.range then spot else nil
 		end
 	end
-	return best
+	return nil
 end
 
--- Sortir de sa cachette. D'un egout, on ressort par la plaque vers
--- laquelle on regarde (`look`, la camera du joueur), ou par la meme.
-function HidingService.leave(player: Roster.Actor, look: Vector3?)
+-- Sortir de sa cachette. D'un egout, par la plaque choisie (`chosen`) : on
+-- y rampe dans le noir, toujours cache, puis on ressort. Sans choix (un
+-- bot, sortir en force), par la meme plaque. Vu en partie : des bots
+-- teleportes d'une plaque a l'autre sans cesse (82 fois en 4 minutes).
+function HidingService.leave(player: Roster.Actor, _look: Vector3?, chosen: Instance?)
 	local spot = byPlayer[player]
-	if spot == nil then
+	if spot == nil or traveling[player] then
 		return
 	end
-	-- Seulement en regardant quelque part (un joueur) : sans direction (un
-	-- bot, sortir en force), on ressort par la meme plaque. Vu en partie :
-	-- les bots entraient et sortaient sans cesse, teleportes d'une plaque a
-	-- l'autre (82 fois en 4 minutes).
-	local target = if spot.kind == H.sewer.name and look then sewerExit(spot, look) else nil
-	release(player, spot, false)
-	local root = Roster.rootOf(player)
-	if target and root then
-		root.CFrame = CFrame.new(target.exits[1].Position + Vector3.new(0, 2, 0))
-		print(string.format("[Royale] %s ressort d'un égout plus loin", Roster.nameOf(player)))
+	local target = if spot.kind == H.sewer.name and player:IsA("Player")
+		then sewerExit(spot, chosen)
+		else nil
+	if target == nil then
+		release(player, spot, false)
+		return
 	end
+	local S = H.sewer
+	local delta = target.inside.Position - spot.inside.Position
+	local seconds = math.clamp(
+		Vector3.new(delta.X, 0, delta.Z).Magnitude / S.travelSpeed,
+		S.travelMin,
+		S.travelMax
+	)
+	traveling[player] = true
+	player:SetAttribute(S.travelAttribute, workspace:GetServerTimeNow() + seconds)
+	task.delay(seconds, function()
+		traveling[player] = nil
+		player:SetAttribute(S.travelAttribute, nil)
+		-- Aspire, deloge ou parti entre-temps : le trajet ne mene plus a rien.
+		if byPlayer[player] ~= spot then
+			return
+		end
+		release(player, spot, false)
+		local root = Roster.rootOf(player)
+		if root and not target.ripping then
+			root.CFrame = CFrame.new(target.exits[1].Position + Vector3.new(0, 2, 0))
+			print(string.format("[Royale] %s ressort d'un égout plus loin", Roster.nameOf(player)))
+		end
+	end)
 end
 
 -- Une nouvelle ouverture de l'Oeil commence.

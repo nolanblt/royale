@@ -15,9 +15,16 @@
 			}
 		},
 
+		"Players": {
+			"$properties": {
+				"CharacterAutoLoads": false
+			}
+		},
+
 		"StarterPlayer": {
 			"$properties": {
-				"CameraMode": "LockFirstPerson"
+				"CameraMode": "Classic",
+				"LoadCharacterAppearance": false
 			},
 			"StarterPlayerScripts": {
 				"Royale": {

@@ -1,11 +1,14 @@
 --!strict
 --[[
-	ZoneView — le cercle : un mur rouge translucide la ou il est, un trait
-	blanc au sol la ou il va (attributs `Cercle` et `CercleSuivant` de
+	ZoneView — le cercle : un rideau d'energie rouge la ou il est, une ligne
+	blanche au sol la ou il va (attributs `Cercle` et `CercleSuivant` de
 	Workspace, des Vector3 x, rayon, z).
 
 	Des panneaux plutot qu'un cylindre : un cylindre ne se voit pas de
-	l'interieur, et on est presque toujours a l'interieur.
+	l'interieur, et on est presque toujours a l'interieur. Tous les panneaux
+	montent au meme sommet (avant, chacun partait du sol sous lui : le haut
+	faisait des marches, des « piquets ») ; les lignes au sol sont couchees
+	d'un point du sol au suivant, elles suivent les collines sans marches.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,7 +26,12 @@ local function rgb(c: { number }): Color3
 end
 local Z = Config.zone
 
-local function ring(parent: Instance, color: Color3, transparency: number): { Part }
+local function ring(
+	parent: Instance,
+	color: Color3,
+	transparency: number,
+	material: Enum.Material
+): { Part }
 	local parts: { Part } = {}
 	for _ = 1, V.wallSegments do
 		local p = Instance.new("Part")
@@ -32,7 +40,7 @@ local function ring(parent: Instance, color: Color3, transparency: number): { Pa
 		p.CanQuery = false
 		p.CanTouch = false
 		p.CastShadow = false
-		p.Material = Enum.Material.Neon
+		p.Material = material
 		p.Color = color
 		p.Transparency = transparency
 		p.Parent = parent
@@ -44,32 +52,56 @@ end
 local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Exclude
 
--- Le sol sous un point, pour que le trait suive les collines.
+-- Le sol sous un point, pour que les lignes suivent les collines.
 local function groundAt(x: number, z: number): number
 	local hit = workspace:Raycast(Vector3.new(x, 500, z), Vector3.new(0, -800, 0), rayParams)
 	return if hit then hit.Position.Y else 0
 end
 
--- `sink` : de combien le panneau s'enfonce sous le sol (un mur ne doit pas
--- flotter au-dessus d'un creux).
-local function place(parts: { Part }, circle: Vector3?, height: number, sink: number)
+-- Les points du cercle et le sol sous chacun (un de plus que de panneaux :
+-- le dernier rejoint le premier).
+local function samples(circle: Vector3, count: number): ({ Vector3 }, number)
+	local points: { Vector3 } = {}
+	local highest = -math.huge
+	for i = 0, count do
+		local a = i / count * math.pi * 2
+		local x = circle.X + math.cos(a) * circle.Y
+		local z = circle.Z + math.sin(a) * circle.Y
+		local y = groundAt(x, z)
+		highest = math.max(highest, y)
+		table.insert(points, Vector3.new(x, y, z))
+	end
+	return points, highest
+end
+
+local function hide(parts: { Part })
+	for _, p in parts do
+		p.Transparency = 1
+	end
+end
+
+-- Le rideau : du sous-sol au meme sommet pour tous.
+local function placeWall(parts: { Part }, points: { Vector3 }, top: number)
 	for i, p in parts do
-		if circle == nil then
-			p.Transparency = 1
-			continue
-		end
-		local radius = circle.Y
-		local a0 = (i - 1) / #parts * math.pi * 2
-		local a1 = i / #parts * math.pi * 2
-		local p0 =
-			Vector3.new(circle.X + math.cos(a0) * radius, 0, circle.Z + math.sin(a0) * radius)
-		local p1 =
-			Vector3.new(circle.X + math.cos(a1) * radius, 0, circle.Z + math.sin(a1) * radius)
-		local midXZ = (p0 + p1) / 2
-		local baseY = groundAt(midXZ.X, midXZ.Z) - sink
-		local mid = midXZ + Vector3.new(0, baseY + (height + sink) / 2, 0)
-		p.Size = Vector3.new(0.4, height + sink, (p1 - p0).Magnitude + 0.2)
-		p.CFrame = CFrame.lookAt(mid, mid + (p1 - p0)) * CFrame.Angles(0, math.pi / 2, 0)
+		local p0, p1 = points[i], points[i + 1]
+		local base = math.min(p0.Y, p1.Y) - V.wallSink
+		local mid = Vector3.new((p0.X + p1.X) / 2, (base + top) / 2, (p0.Z + p1.Z) / 2)
+		local along = Vector3.new(p1.X - p0.X, 0, p1.Z - p0.Z)
+		p.Size = Vector3.new(0.4, top - base, along.Magnitude + 0.2)
+		p.CFrame = CFrame.lookAt(mid, mid + along) * CFrame.Angles(0, math.pi / 2, 0)
+		p.Transparency = V.wallTransparency
+	end
+end
+
+-- Une ligne couchee au sol, d'un point du sol au suivant.
+local function placeLine(parts: { Part }, points: { Vector3 }, width: number, transparency: number)
+	local lift = Vector3.new(0, V.lineLift, 0)
+	for i, p in parts do
+		local p0, p1 = points[i] + lift, points[i + 1] + lift
+		local mid = (p0 + p1) / 2
+		p.Size = Vector3.new(width, 0.2, (p1 - p0).Magnitude + 0.3)
+		p.CFrame = CFrame.lookAt(mid, p1)
+		p.Transparency = transparency
 	end
 end
 
@@ -77,8 +109,10 @@ function ZoneView.start()
 	local folder = Instance.new("Folder")
 	folder.Name = "RoyaleCercleVu"
 	folder.Parent = workspace
-	local wall = ring(folder, rgb(V.wallColor), V.wallTransparency)
-	local nextRing = ring(folder, rgb(V.nextColor), V.nextTransparency)
+	local wall =
+		ring(folder, rgb(V.wallColor), V.wallTransparency, (Enum.Material :: any)[V.wallMaterial])
+	local wallBase = ring(folder, rgb(V.wallBaseColor), V.wallBaseTransparency, Enum.Material.Neon)
+	local nextRing = ring(folder, rgb(V.nextColor), V.nextTransparency, Enum.Material.Neon)
 	rayParams.FilterDescendantsInstances = { folder }
 
 	local function refresh()
@@ -90,14 +124,20 @@ function ZoneView.start()
 		if c and c.Y >= Z.startRadius then
 			c = nil
 		end
-		for _, p in wall do
-			p.Transparency = V.wallTransparency
+		if c then
+			local points, highest = samples(c, V.wallSegments)
+			placeWall(wall, points, highest + V.wallHeight)
+			placeLine(wallBase, points, V.wallBaseWidth, V.wallBaseTransparency)
+		else
+			hide(wall)
+			hide(wallBase)
 		end
-		for _, p in nextRing do
-			p.Transparency = V.nextTransparency
+		if n then
+			local points = samples(n, V.wallSegments)
+			placeLine(nextRing, points, V.nextWidth, V.nextTransparency)
+		else
+			hide(nextRing)
 		end
-		place(wall, c, V.wallHeight, V.wallHeight / 2)
-		place(nextRing, n, V.nextHeight, V.nextHeight / 2)
 	end
 	workspace:GetAttributeChangedSignal(Z.attribute):Connect(refresh)
 	workspace:GetAttributeChangedSignal(Z.nextAttribute):Connect(refresh)

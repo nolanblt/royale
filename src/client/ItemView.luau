@@ -18,7 +18,10 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Royale = ReplicatedStorage:WaitForChild("Royale")
+local ActionAnim = require(Royale:WaitForChild("Effets"):WaitForChild("ActionAnim"))
 local Bag = require(Royale:WaitForChild("Bag"))
+local ItemModels = require(Royale:WaitForChild("Effets"):WaitForChild("ItemModels"))
+local ItemShapes = require(Royale:WaitForChild("ItemShapes"))
 local Config = require(Royale:WaitForChild("Config"))
 
 local ButtonIcons = require(script.Parent.ButtonIcons)
@@ -26,6 +29,12 @@ local InputBus = require(script.Parent.InputBus)
 local Throw = require(Royale:WaitForChild("Throw"))
 
 local ItemView = {}
+
+-- Branches par start ; avant, rien n'est tenu.
+ItemView.holding = function(): boolean
+	return false
+end
+ItemView.useHeld = function(_state: Enum.UserInputState) end
 
 local BG = Config.bag
 local T = Config.throw
@@ -127,13 +136,15 @@ function ItemView.start()
 	gui.IgnoreGuiInset = true
 	gui.Parent = player:WaitForChild("PlayerGui")
 
-	-- Les 4 places, en bas au centre. La largeur se deduit du nombre de places.
+	-- Les mains nues puis les 4 places, en bas au centre. La largeur se
+	-- deduit du nombre de places.
 	local slotW, slotH, gap = V.slotWidth, V.slotHeight, V.slotGap
+	local count = BG.slots - BG.hands + 1
 	local bar = Instance.new("Frame")
 	bar.Name = "Places"
 	bar.BackgroundTransparency = 1
 	bar.AnchorPoint = Vector2.new(0.5, 1)
-	bar.Size = UDim2.fromOffset(BG.slots * slotW + (BG.slots - 1) * gap, slotH)
+	bar.Size = UDim2.fromOffset(count * slotW + (count - 1) * gap, slotH)
 	bar.Position = UDim2.new(0.5, 0, 1, -V.slotBottom)
 	bar.Parent = gui
 	-- Sur un ecran etroit, la barre retrecit pour tenir (vu en jeu : elle
@@ -161,11 +172,23 @@ function ItemView.start()
 	gui:GetPropertyChangedSignal("AbsoluteSize"):Connect(refit)
 	UserInputService.LastInputTypeChanged:Connect(refit)
 	refit()
-	local slots: { { frame: Frame, name: TextLabel, stroke: UIStroke } } = {}
-	for i = 1, BG.slots do
+	local slots: { [number]: { frame: Frame, name: TextLabel, stroke: UIStroke } } = {}
+	for i = BG.hands, BG.slots do
 		local f = Instance.new("Frame")
+		f.Name = "Place" .. i
 		f.Size = UDim2.fromOffset(slotW, slotH)
-		f.Position = UDim2.fromOffset((i - 1) * (slotW + gap), 0)
+		f.Position = UDim2.fromOffset((i - BG.hands) * (slotW + gap), 0)
+		-- Au doigt, on touche la place qu'on veut tenir (plus de fleches).
+		f.Active = true
+		local index = i
+		f.InputBegan:Connect(function(input: InputObject)
+			if
+				input.UserInputType == Enum.UserInputType.Touch
+				and player:GetAttribute(Config.match.aliveAttribute) == true
+			then
+				itemRemote:FireServer("select", index)
+			end
+		end)
 		f.BackgroundColor3 = Color3.fromRGB(20, 14, 14)
 		f.BackgroundTransparency = 0.35
 		f.BorderSizePixel = 0
@@ -175,7 +198,7 @@ function ItemView.start()
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 		stroke.Parent = f
 		local name = textLabel(f, UDim2.fromScale(1, 1), UDim2.fromScale(0.5, 0), 16)
-		table.insert(slots, { frame = f, name = name, stroke = stroke })
+		slots[i] = { frame = f, name = name, stroke = stroke }
 	end
 	local selectedName = textLabel(
 		gui,
@@ -263,27 +286,62 @@ function ItemView.start()
 		}))
 	)
 
-	InputBus.bind("RoyaleObjetUtiliser", function(_, state)
-		if not playing() then
-			aiming = false
-			hideDots()
-			return Enum.ContextActionResult.Pass
-		end
+	local function heldDef(): any
+		return I[currentBag()[selectedSlot()]]
+	end
+	ItemView.holding = function(): boolean
+		return playing() and heldDef() ~= nil
+	end
+	-- R2 (Controls) : se servir de l'objet tenu. Au doigt, un objet a lancer
+	-- se vise tant qu'on tient le bouton et part au lacher ; a la manette et
+	-- a la souris, il part a l'appui (vise ou non avec L2).
+	-- Le geste de l'objet, joue chez soi au moment ou il sert.
+	local function gesture()
 		local id = currentBag()[selectedSlot()]
 		local def = I[id]
+		local character = player.Character
+		if def and character then
+			ActionAnim.play(
+				Config.actionAnims,
+				character:FindFirstChildOfClass("Humanoid"),
+				ActionAnim.forItem(Config.actionAnims, id, def.kind)
+			)
+		end
+	end
+	ItemView.useHeld = function(state: Enum.UserInputState)
+		local def = heldDef()
+		if def == nil or def.kind == "passive" then
+			return
+		end
+		local touch = ButtonIcons.touch()
 		if state == Enum.UserInputState.Begin then
-			if def and def.kind == "throw" then
+			if def.kind == "throw" and touch then
 				aiming = true
-			elseif def then
-				itemRemote:FireServer("use", camera.CFrame.LookVector)
+				return
 			end
-		elseif state == Enum.UserInputState.End and aiming then
 			aiming = false
 			hideDots()
+			gesture()
+			itemRemote:FireServer("use", camera.CFrame.LookVector)
+		elseif state == Enum.UserInputState.End and touch and aiming then
+			aiming = false
+			hideDots()
+			gesture()
 			itemRemote:FireServer("use", camera.CFrame.LookVector)
 		end
+	end
+
+	-- L2 maintenu : l'arc d'un objet a lancer ; lacher sans lancer le range.
+	InputBus.bind("RoyaleViser", function(_, state)
+		local def = heldDef()
+		if state == Enum.UserInputState.Begin and playing() and def and def.kind == "throw" then
+			aiming = true
+		elseif state ~= Enum.UserInputState.Begin then
+			aiming = false
+			hideDots()
+		end
 		return Enum.ContextActionResult.Sink
-	end, false, table.unpack(keys(onFoot.useItem)))
+	end, false, table.unpack(keys(onFoot.aim)))
 
 	-- Les lancers, vus par tous.
 	projectileRemote.OnClientEvent:Connect(
@@ -292,15 +350,31 @@ function ItemView.start()
 			if def == nil then
 				return
 			end
-			local p = Instance.new("Part")
-			p.Size = Vector3.one * V.projectileSize
-			p.Material = Enum.Material.Neon
-			p.Color = rgb(Config.rarities[def.rarity].color)
-			p.Anchored = true
-			p.CanCollide = false
-			p.CanQuery = false
-			p.CanTouch = false
-			p.Parent = workspace
+			-- L'objet lui-meme, qui tourne sur son arc (avant : une boule de
+			-- lumiere). Sans dessin, la boule a la couleur de sa rarete.
+			local p: Model | Part
+			local drawn = ItemModels.build(ItemShapes, id, CFrame.new(origin))
+			if drawn then
+				for _, d in drawn:GetDescendants() do
+					if d:IsA("BasePart") then
+						d.Anchored = true
+					end
+				end
+				drawn.Parent = workspace
+				p = drawn
+			else
+				local ball = Instance.new("Part")
+				ball.Size = Vector3.one * V.projectileSize
+				ball.Material = Enum.Material.Neon
+				ball.Color = rgb(Config.rarities[def.rarity].color)
+				ball.Anchored = true
+				ball.CanCollide = false
+				ball.CanQuery = false
+				ball.CanTouch = false
+				ball.Parent = workspace
+				p = ball
+			end
+			local spin = Config.heldItems.spin * math.pi * 2
 			local started = os.clock()
 			local o = { x = origin.X, y = origin.Y, z = origin.Z }
 			local v = { x = velocity.X, y = velocity.Y, z = velocity.Z }
@@ -315,7 +389,12 @@ function ItemView.start()
 					return
 				end
 				local at = Throw.at(o, v, T.gravity, t)
-				p.CFrame = CFrame.new(at.x, at.y, at.z)
+				local cf = CFrame.new(at.x, at.y, at.z) * CFrame.Angles(t * spin, 0, t * spin * 0.4)
+				if p:IsA("Model") then
+					p:PivotTo(cf)
+				else
+					p.CFrame = cf
+				end
 			end)
 		end
 	)
@@ -358,7 +437,7 @@ function ItemView.start()
 		selectedName.Visible = inMatch
 		for i, slot in slots do
 			local def = I[bag[i]]
-			slot.name.Text = if def then def.name else ""
+			slot.name.Text = if def then def.name elseif i == BG.hands then "Mains nues" else ""
 			slot.stroke.Color = if def
 				then rgb(Config.rarities[def.rarity].color)
 				else Color3.fromRGB(70, 60, 60)
@@ -366,12 +445,17 @@ function ItemView.start()
 			slot.frame.BackgroundTransparency = if i == sel then 0.1 else 0.45
 		end
 		local selDef = I[bag[sel]]
-		selectedName.Text = if selDef
-			then selDef.name .. " — " .. selDef.blurb .. (if selDef.kind == "throw"
-				then " · L2 maintenu : lancer"
-				elseif selDef.kind == "passive" then " · agit tout seul"
-				else " · L2 : utiliser")
-			else ""
+		-- Au doigt, le gros bouton dit deja ce qu'il fait (Lancer, Utiliser).
+		local pad = ButtonIcons.gamepad()
+		local how = if selDef == nil
+			then ""
+			elseif selDef.kind == "passive" then " · agit tout seul"
+			elseif ButtonIcons.touch() then ""
+			elseif selDef.kind == "throw" then (if pad
+				then " · R2 lancer · L2 viser"
+				else " · clic lancer · clic droit viser")
+			else (if pad then " · R2 utiliser" else " · clic utiliser")
+		selectedName.Text = if selDef then selDef.name .. " — " .. selDef.blurb .. how else ""
 
 		-- Les effets en cours.
 		local lines: { string } = {}

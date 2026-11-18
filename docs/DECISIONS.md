@@ -953,3 +953,156 @@ privée avec ou sans bots au choix ».
   comptes d'un même joueur se donneraient la victoire à tour de rôle.
 - Seul en privée sans bots : la partie va jusqu'au bout, l'Œil finit par
   prendre tout le monde (un entraînement).
+
+## Le salon après le test au téléphone (16 novembre 2026)
+
+- Les cachettes en vitrine sont **aussi solides que les vraies** (avant,
+  on les traversait toutes). On ne peut toujours pas y entrer : c'est une
+  vitrine. Les parts invisibles du modèle ne bloquent pas.
+- La boutique a son propre bandeau de réponses (tirage, achat, ce qui
+  manque) : le message du serveur n'était montré que par l'écran de partie,
+  caché sous la boutique.
+
+## Le grand retour de Josh après sa première partie (16 novembre 2026)
+
+Demandé par Josh : troisième personne, commandes « comme les autres jeux »,
+moins de boutons au téléphone, objets modélisés en main et animés, coups
+visibles, meubles à fouiller visibles, faisceaux depuis la pupille, l'Œil
+qui cherche ceux qui sont dehors, plus de maisons et de voitures qui
+flottent, de la lumière dans les maisons, un plus beau mur de zone.
+Décidé sans lui (à valider en jouant) :
+
+- **Caméra** : troisième personne de Roblox, recul de 7 à 16 studs
+  (`Config.camera`) : assez pour voir autour de soi, pas assez pour regarder
+  par-dessus un toit sans s'y montrer. Frapper, pousser ou lancer tourne
+  d'abord le personnage vers où vise la caméra.
+- **Manette, sur le modèle de Fortnite et du sac de Roblox** : R2 se sert de
+  ce qu'on tient (poings, objet, lancer) ; L2 maintenu vise ; L1 / R1
+  passent des mains nues aux 4 places ; A saute, B s'accroupit (maintenu :
+  s'allonger), X interagit, Y pousse, L3 court ; croix haut : un appui
+  « ici », deux appuis « danger » ; croix bas : l'émote ; croix gauche : la
+  carte. La croix droite est libre. Les mains nues sont une place à part
+  (`Config.bag.hands`) : on y est en arrivant, et ramasser n'y change rien
+  pour un joueur ; un bot, lui, tient ce qu'il ramasse.
+- **Téléphone** : un gros bouton d'action qui dit ce qu'il fera (Frapper,
+  Utiliser, Lancer : maintenu on vise, lâché on lance), Accroupi, Courir,
+  et Pousser seulement quand quelqu'un est à portée ; on touche sa place
+  dans le sac pour la tenir (plus de flèches) ; en haut : carte, signal,
+  émote. De 11 boutons à 4 (plus 1 quand quelqu'un est proche).
+- **Objets** : les 28 dessinés en pièces (`ItemShapes`), tenus à la main
+  droite par tous (`HeldService`), qui tournent en vol, le mannequin posé à
+  taille d'homme. Gestes : coup de poing, batte, lancer, poussée, poser au
+  sol, aux yeux, utiliser, coup reçu (`Config.actionAnims`).
+- **Coups** : la cible clignote en rouge avec des éclats et recule
+  (animation), l'attaquant voit une croix au centre, la cible un voile
+  rouge, et la caméra tremble (`ImpactView`, `Config.impact`).
+- **Fouille** : les 12 meubles à fouiller les plus proches (45 studs), pas
+  encore fouillés, ont un contour doré qui respire (`LootGlow`).
+- **L'Œil** : les faisceaux partent du bout de la pupille, où qu'il
+  regarde. Un faisceau sans cible va vers le plus proche des participants
+  à découvert qu'aucun autre faisceau ne vise, puis vers les cachés
+  (`Targeting.roamGoal`). Avant, il allait vers le plus proche de tous,
+  caché ou non : avec 20 bots, rarement vers toi. Il se dirige, il ne
+  détecte toujours pas à travers les murs.
+- **Carte** (`tools/carte/Ancrage.luau`, `Eclairage.luau`, appliqués à la
+  place) : 32 emplacements de cachettes descendus jusqu'au sol (roseaux,
+  abris), 3 soubassements de pierre sous des maisons en pente (dont la
+  ferme 5, un coin à 12,5 studs en l'air) ; bougies dans 27 maisons sur 62
+  et 8 lanternes. Le Quartier suspendu flotte toujours, exprès : à
+  confirmer avec Josh que ce n'est pas ce qu'il a vu.
+- **Mur du cercle** : rideau d'énergie rouge (matière ForceField) au sommet
+  droit, ligne de braise au pied ; le prochain cercle est une ligne blanche
+  couchée au sol (avant : de petits panneaux debout, une palissade).
+
+## Les égouts refaits (16 novembre 2026)
+
+Choisi par Josh : « une salle et un choix de sortie » (plutôt que de vrais
+tunnels). Avant : une case invisible 6 studs sous la route, dans le vide.
+
+- Sous chacune des 30 plaques, une salle de 10 × 10 studs, 6 studs sous la
+  route (briques, sol, rigole d'eau, tuyaux, gouttes, lampe de chantier),
+  reliée à la plaque par un puits de briques avec une échelle et la lumière
+  qui tombe de la grille. Construite au démarrage du serveur
+  (`HidingService`), le terrain creusé autour.
+- À 1,2 stud sous la route, le terrain creusé ouvrait des trous au bord des
+  routes (7 points mesurés au rayon) : la salle est descendue à 6 studs, et
+  la mesure retrouve les 3 seuls creux d'origine.
+- Dedans : les plaques à moins de 160 studs ont un repère (« Ici » ou leur
+  distance), la croix gauche / droite choisit, X y mène. Au téléphone, deux
+  flèches ‹ › apparaissent. Le trajet se fait dans le noir, 1,5 à 4 s selon
+  la distance, toujours caché ; aspiré ou délogé entre-temps, il s'arrête.
+  Le serveur vérifie la plaque choisie.
+- Un bot ressort toujours par sa propre plaque (comme avant).
+
+## Le Ventre refait (16 novembre 2026)
+
+Demandé par Josh : on ne comprenait pas où on arrivait (sombre, à peine
+la place de bouger, murs invisibles), et en duel on ne voyait ni où l'on
+était ni l'adversaire. Décidé sans lui :
+
+- **Cause du noir à l'arrivée** : le streaming de Roblox ne livrait le
+  Ventre (à 3 200 studs de tout) que par morceaux. Le Ventre est maintenant
+  un modèle `Persistent` : envoyé en entier à chaque joueur.
+- **Plus de cages** : on attend dans la **Fosse**, une grande plateforme
+  ronde (38 studs de rayon) où l'on marche librement, fermée par un rideau
+  d'énergie rouge qu'on voit (ForceField), avec des barreaux à pointe de
+  braise et 6 braseros. Plus aucun mur invisible. Le concept disait « une
+  cage » : la Fosse en garde l'idée, en plus grand et visible.
+- **Lumière** : au Ventre, chez soi, la brume de la carte laisse place à
+  une lumière rouge sourde (`VentreView`, `Config.goulag.view`) ; six
+  lueurs rouges baignent la salle ; l'iris de l'Œil brille au plafond.
+- **Plateformes** : toujours visibles, à demi effacées au repos (on ne les
+  foule pas) ; en duel, pleines, braise allumée et un projecteur au-dessus.
+- **L'adversaire** porte un contour rouge vif visible à travers tout.
+- Le texte d'arrivée dit l'enjeu : « Dernière chance : gagne ton duel, il
+  te recrache dans la partie. »
+- Corrigé au passage : l'aspiration pouvait ramener le corps dans le ciel
+  après sa pose au Ventre (la fin de l'animation passait après) ; les
+  contours (adversaire, meubles) et les panneaux du salon disparaissaient
+  à la réapparition du personnage ; la ligne d'aide du duel débordait de
+  l'écran (toutes les lignes du HUD tiennent maintenant dans la largeur).
+
+## Le skin Roblox (16 novembre 2026)
+
+Josh voyait encore son avatar Roblox au début. Cause : l'apparition
+automatique des personnages n'était coupée qu'une fois le serveur
+démarré ; un joueur arrivé pendant ce temps recevait son vrai avatar. Elle
+est maintenant coupée dans la place (`default.project.json` :
+`Players.CharacterAutoLoads` faux, `StarterPlayer.LoadCharacterAppearance`
+faux) : chacun reçoit toujours l'avatar neutre du jeu (`Avatar`).
+
+## Le contrôle complet (16 novembre 2026)
+
+Demandé par Josh : faire le tour de tout le jeu avec ses critères (beau,
+cohérent, compréhensible, rien d'invisible, rien qui flotte). Trouvé et
+corrigé :
+
+- **La visée du départ montrait le vide** : le personnage, posé à l'Œil,
+  était à 570 studs de la ville, et le streaming n'avait pas encore chargé
+  la carte. Avant la visée, le serveur fait charger la carte autour du
+  centre (`RequestStreamAroundAsync`, `ReplicationFocus`, au plus
+  `Config.match.streamSeconds`) ; la brume de hauteur s'efface aussi
+  pendant la visée (`Config.view.aimHaze`).
+- **Caché dans un abri fermé**, la caméra à la troisième personne se
+  collait dans la boîte (du noir) : la première personne revient le temps
+  d'y être (`Config.hiding.closedAttribute`). Égouts, buissons et grands
+  abris restent à la troisième personne.
+- **Les textes nommaient les boutons de la manette à tout le monde** (« R2 »
+  au clavier) : `ButtonIcons.name` donne la touche de l'appareil utilisé
+  (caché, porter, duel, cocon, K.O., spectateur).
+- **Effets d'objets** : la bouteille se brise en éclats, le filet tombe en
+  cage de cordes sur qui le reçoit (rien ne se voyait), le pétard et les
+  fusées sont leurs vrais modèles au sol (avant : un cube, un bloc).
+- **Ce qu'on pose sur une cachette se voit** : planches clouées, cadenas,
+  clochette, croix de craie. Le piège à loup reste caché (il doit
+  surprendre).
+- **Gravats** (carte et salon) : clairs et posés dessus, ils passaient pour
+  des cartons ; enfoncés à moitié, en pierre sombre (313 dans la place).
+- Dans un égout, une seule aide (celle du choix de sortie).
+
+Vérifié et laissé : aucun arbre ne pousse dans un bâtiment (ceux repérés
+sont dans des cours de ferme ou sous les montagnes russes). Le Quartier
+suspendu flotte exprès : à trancher avec Josh.
+- **Décidé par Josh (16 novembre 2026) : le Quartier suspendu reste comme
+  il est**, ses îlots flottent exprès. (Seule la voiture d'un îlot, qui
+  flottait au-dessus de lui, a été reposée.)

@@ -283,9 +283,10 @@ end
 
 local function panels(salon: Instance)
 	local player = Players.LocalPlayer
-	local holder = Instance.new("Folder")
-	holder.Name = "RoyalePanneaux"
-	holder.Parent = player:WaitForChild("PlayerGui")
+	-- Les panneaux vont droit dans PlayerGui, sans se vider a la
+	-- reapparition (un dossier, lui, y disparaissait avec eux au retour de
+	-- partie : des panneaux vides).
+	local holder = player:WaitForChild("PlayerGui")
 	local guis: { [SurfaceGui]: number } = {}
 	local function add(part: Instance)
 		local index = part:GetAttribute("Panneau")
@@ -299,6 +300,7 @@ local function panels(salon: Instance)
 		gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 		gui.PixelsPerStud = T.pixelsPerStud
 		gui.LightInfluence = 0
+		gui.ResetOnSpawn = false
 		gui.Parent = holder
 		guis[gui] = index
 		drawPanel(gui, index)

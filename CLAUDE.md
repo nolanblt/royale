@@ -213,6 +213,28 @@ Rokit, StyLua, Selene, Lune, GitHub Actions, tous les chiffres dans
   n'a pas ses identifiants) ; classement remis à zéro ; vignettes et icône
   dans `docs/vignettes` (`tools/Vignettes.luau`, `tools/vignettes.ps1`).
 
+- **16 novembre 2026, après la première partie de Josh** : troisième
+  personne (`Config.camera`) ; manette refaite (R2 sert ce qu'on tient,
+  L2 vise, mains nues `Config.bag.hands`, signal unique en double appui) ;
+  téléphone à 4 boutons ; les 28 objets dessinés en pièces (`ItemShapes`,
+  `Effets/ItemModels`), tenus en main (`HeldService`), lancés en tournant ;
+  8 gestes générés (`Effets/ActionAnim`, `Config.actionAnims`) ; coups
+  visibles (`ImpactView`) ; meubles à fouiller en contour doré
+  (`LootGlow`) ; faisceaux depuis la pupille qui tourne, l'Œil errant
+  cherche ceux à découvert (`Targeting.roamGoal`) ; mur de zone en rideau
+  ForceField. Recette : `Ancrage` (rien ne flotte, emplacements au sol,
+  soubassements) et `Eclairage` (bougies, lanternes). Studio est connecté
+  au compte propriétaire du jeu (SachaReveilToi) : les assets générés lui
+  appartiennent. Les objets en main entraient dans l'avant-bras à plat :
+  `Config.heldItems.tilt` -75 (mesuré). Une animation se juge en partie
+  (`Animator:StepAnimations` ne bouge rien en édition).
+- **16 novembre 2026, les égouts** : une salle sous chaque plaque (puits,
+  échelle, lampe ; `HidingService.buildSewerRoom`, `Config.hiding.sewer`),
+  choix de la sortie à la croix (`SewerView`), trajet dans le noir. Les
+  repères (BillboardGui) ne se voient pas en `screen_capture`. Le terrain
+  creusé près de la surface y ouvre des trous (cases de 4 studs) : creuser
+  à 6 studs ou plus sous la route.
+
 ## La place et la recette
 
 - **La CI refuse aussi les avertissements de Selene** (vu la nuit du 12
