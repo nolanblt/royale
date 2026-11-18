@@ -1,6 +1,9 @@
 # Royale — notes pour l'assistant
 
-Nom de code du dépôt : **Royale**. Titre du jeu : **à choisir avec Josh**.
+Nom de code du dépôt : **Royale**. Titre du jeu sur Roblox : **Hide From The
+Eye 👁️** (universeId `10776125165`, placeId `74018653591531`). La place
+appartient au compte Roblox **SachaReveilToi**, celui avec lequel Studio est
+connecté : les assets générés (animations) lui appartiennent, c'est voulu.
 Battle royale Roblox (solo et escouades, 24 joueurs au plus) où l'ennemi
 principal est l'Œil géant du ciel : il balaie la ville, aspire qui il voit, et
 devient plus fort de Regard en Regard. Le dernier joueur ou la dernière
@@ -14,6 +17,49 @@ qu'avec Josh. Une décision prise sans lui se note dans
 Les notes communes à tous les jeux de Josh sont dans
 `C:\Users\boill\.claude\CLAUDE.md` (copie dans
 `..\Survivor\docs\NOTES-COMMUNES.md`).
+
+## Reprendre ici (nouveau chat) — état au 18 novembre 2026
+
+**Le jeu est fini et en phase de test, pas encore public.** Dernier commit :
+« La grande refonte après la première partie de Josh » (poussé sur `main`).
+
+- **Ce que Josh a fait** : premières parties (PC, téléphone) le 16 novembre ;
+  ses reproches ont donné la refonte du 16 au 18 novembre (troisième
+  personne, commandes standard, objets en main et animés, coups visibles,
+  égouts, Ventre, contrôle complet). Détail : `docs/DECISIONS.md` (sections
+  du 16 novembre), ce qu'il doit regarder en jouant : `docs/A-TESTER.md`
+  (sections du 16 novembre, à la fin).
+- **À faire par Josh maintenant** : republier la place depuis Studio
+  (Fichier → Publier sur Roblox), puis rejouer en suivant `A-TESTER.md`, à
+  la manette et au téléphone, avec des amis invités comme testeurs.
+- **Jamais vu en vrai par l'assistant** (le pont MCP ne fait pas bouger le
+  personnage ni la caméra) : les commandes à la manette, le téléphone, les
+  repères des égouts (les BillboardGui ne sortent pas en capture), la
+  visée du départ depuis la correction du chargement.
+- **Le lancement** (`docs/STRATEGIE-LANCEMENT.md` §11) : public prévu le
+  vendredi 20 novembre vers 21 h si les tests sont bons ; remettre le
+  classement à zéro ce jour-là (`Config.leaderboard.store`) ; pas de
+  changement les 3 jours suivants ; petite pub de test (~10 €) seulement si
+  les chiffres sont bons. Josh devait payer la caution de 1 000 Robux
+  (Kids and Select, rendue après 90 jours) et inviter ses amis comme
+  testeurs (Creator Hub → Gérer l'audience → Inviter).
+- **Décidé par Josh, à ne pas rouvrir** : seules les parties publiques
+  comptent au classement ; le Quartier suspendu flotte exprès et reste ;
+  égouts en « salle + choix de sortie » (pas de vrais tunnels).
+- **Points ouverts** : 16 avertissements « pas la permission » au démarrage
+  de Studio (textures des matières générées) à vérifier dans le jeu
+  publié ; proposés à Josh sans réponse : plafonner la taille d'une partie
+  à 24 dans le code, renommer « Parier » en « Pronostic », changer les
+  cosmétiques de sang.
+- **Ce que Josh attend de l'assistant** : il juge en jouant ; tout doit se
+  voir, se comprendre, rien ne flotte ni n'est invisible, chaque action a un
+  retour visible. Regarder à l'image dans Studio avant de dire « fait », et
+  dire ce qui n'a été que mesuré.
+- **Pièges vus cette semaine** : le streaming de Roblox (`StreamingEnabled`)
+  ne charge qu'autour du personnage — tout lieu lointain (Ventre, visée)
+  doit être `Persistent` ou chargé exprès ; `PlayerGui` se vide à chaque
+  réapparition sauf les écrans `ResetOnSpawn = false` ; le terrain creusé
+  près de la surface ouvre des trous (cases de 4 studs).
 
 ## D'où vient le jeu
 
